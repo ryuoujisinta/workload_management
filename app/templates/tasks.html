@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>タスク登録</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>タスク登録</h1>
+    <form method="post">
+        <label>タスク名: <input type="text" name="task_name"></label><br>
+        <label>説明: <input type="text" name="description"></label><br>
+        <button type="submit">登録</button>
+    </form>
+</body>
+</html>
