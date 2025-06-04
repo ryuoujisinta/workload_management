@@ -1,19 +1,57 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 2em;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #334e68;
+    color: #fff;
+    padding: 1em 2em;
+}
+
+header h1 {
+    margin: 0;
+}
+
+nav a {
+    color: #fff;
+    margin-right: 1em;
+    text-decoration: none;
+}
+
+main {
+    padding: 2em;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
 }
 
 form label {
     display: block;
-    margin-bottom: 0.5em;
+    margin-bottom: 1em;
+}
+
+button {
+    padding: 0.5em 1em;
+    background-color: #334e68;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #446c89;
 }
 
 table {
+    width: 100%;
     border-collapse: collapse;
     margin-bottom: 1em;
 }
 
-td, th {
+th, td {
     border: 1px solid #ccc;
     padding: 0.5em;
     text-align: center;
