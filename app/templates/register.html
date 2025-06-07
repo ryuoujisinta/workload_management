@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}ユーザー登録{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h2>ユーザー登録</h2>
+    <form method="post">
+        <label>ユーザー名
+            <input type="text" name="username" required>
+        </label>
+        <label>パスワード
+            <input type="password" name="password" required>
+        </label>
+        <label>権限
+            <select name="role">
+                <option value="user">一般</option>
+                <option value="admin">管理者</option>
+            </select>
+        </label>
+        <button type="submit">登録</button>
+    </form>
+</div>
+{% endblock %}

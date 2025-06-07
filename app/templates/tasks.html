@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}タスク登録{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h2>タスク登録</h2>
+    <form method="post">
+        <label>タスク名
+            <input type="text" name="task_name" required>
+        </label>
+        <label>説明
+            <input type="text" name="description" required>
+        </label>
+        <button type="submit">登録</button>
+    </form>
+</div>
+{% endblock %}

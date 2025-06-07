@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <h1>工数管理アプリ</h1>
+        <nav class="site-nav">
+            <a href="{{ url_for('main.login') }}">ログイン</a>
+            <a href="{{ url_for('main.register') }}">ユーザー登録</a>
+            <a href="{{ url_for('main.tasks') }}">タスク登録</a>
+            <a href="{{ url_for('main.workloads') }}">工数登録</a>
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
