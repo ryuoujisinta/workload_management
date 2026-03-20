@@ -18,11 +18,17 @@ export default function Navbar() {
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link href="/" className="transition-colors hover:text-foreground/80 text-foreground">
-              マイページ
+              ダッシュボード
+            </Link>
+            <Link href="/user/timesheet" className="transition-colors hover:text-foreground/80 text-foreground/60">
+              タイムシート
+            </Link>
+            <Link href="/user/tasks" className="transition-colors hover:text-foreground/80 text-foreground/60">
+              マイタスク
             </Link>
             {session.user.role === "ADMIN" && (
               <Link href="/admin" className="transition-colors hover:text-foreground/80 text-foreground/60">
-                管理者ダッシュボード
+                管理者メニュー
               </Link>
             )}
           </nav>
