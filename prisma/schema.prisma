@@ -1,13 +1,73 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum WorkloadStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(USER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  userTasks    UserTask[]
+  workloads    Workload[]
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  project     String
+  name        String
+  targetMonth String   // e.g. "2026-03"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userTasks   UserTask[]
+  workloads   Workload[]
+}
+
+// ユーザーが選択した「マイタスク」
+model UserTask {
+  id        String   @id @default(cuid())
+  userId    String
+  taskId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, taskId])
+}
+
+// 1日・1タスクごとの工数データ
+model Workload {
+  id        String         @id @default(cuid())
+  userId    String
+  taskId    String
+  date      DateTime       // Date only mappings (00:00 UTC)
+  hours     Float          @default(0)
+  status    WorkloadStatus @default(DRAFT)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId, date])
 }
