@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createUser, deleteUser } from "@/actions/admin-users"
+import Link from "next/link"
 
 export default async function AdminUsersPage() {
   const session = await auth()
@@ -48,7 +49,10 @@ export default async function AdminUsersPage() {
                       <td className="p-3">{u.name}</td>
                       <td className="p-3">{u.email}</td>
                       <td className="p-3">{u.role === "ADMIN" ? "管理者" : "一般"}</td>
-                      <td className="p-3 text-right">
+                      <td className="p-3 text-right space-x-2">
+                        <Link href={`/admin/users/${u.id}/timesheet`}>
+                          <Button type="button" variant="outline" size="sm">工数確認</Button>
+                        </Link>
                         {session.user.id !== u.id && (
                           <form action={deleteUser.bind(null, u.id)} className="inline">
                             <Button type="submit" variant="destructive" size="sm">削除</Button>
