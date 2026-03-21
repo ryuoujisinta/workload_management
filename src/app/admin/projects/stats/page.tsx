@@ -97,7 +97,7 @@ export default async function ProjectStatsPage(props: {
       <Card>
         <CardHeader>
           <CardTitle>
-            {selectedYear}年度 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"} の集計
+            ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -107,6 +107,7 @@ export default async function ProjectStatsPage(props: {
             </div>
           ) : (
             <div className="border rounded-md overflow-x-auto">
+              {/* Existing User Table */}
               <table className="w-full text-sm text-center border-collapse">
                 <thead className="bg-muted">
                   <tr>
@@ -128,6 +129,66 @@ export default async function ProjectStatsPage(props: {
                       ))}
                       <td className="p-3 border-l bg-muted/5 sticky right-0 z-10 font-bold">
                         {u.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-muted/30 font-bold text-right border-t-2">
+                  <tr>
+                    <td className="p-3 text-left border-r sticky left-0 bg-muted z-10">合計</td>
+                    {months.map(m => (
+                      <td key={m} className="p-3 border-r last:border-r-0">
+                        {stats.monthTotals[m] > 0 ? stats.monthTotals[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                      </td>
+                    ))}
+                    <td className="p-3 border-l bg-muted/30 sticky right-0 z-10">
+                      {stats.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            タスク別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.tasks.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              該当するデータが見つかりませんでした。
+            </div>
+          ) : (
+            <div className="border rounded-md overflow-x-auto">
+              <table className="w-full text-sm text-center border-collapse">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="p-3 font-medium text-left border-b border-r sticky left-0 bg-muted z-10 w-64">プロジェクト / タスク名</th>
+                    {months.map(m => (
+                      <th key={m} className="p-3 font-medium border-b min-w-[70px]">{parseInt(m)}月</th>
+                    ))}
+                    <th className="p-3 font-medium border-b border-l bg-muted/30 sticky right-0 z-10 w-24">合計</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y text-right">
+                  {stats.tasks.map(t => (
+                    <tr key={t.id} className="hover:bg-muted/50 transition-colors">
+                      <td className="p-3 text-left border-r sticky left-0 bg-background z-10 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-64">
+                        <div className="text-xs text-muted-foreground">{t.projectName}</div>
+                        <div>{t.name}</div>
+                      </td>
+                      {months.map(m => (
+                        <td key={m} className="p-3 border-r last:border-r-0">
+                          {t.months[m] > 0 ? t.months[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                        </td>
+                      ))}
+                      <td className="p-3 border-l bg-muted/5 sticky right-0 z-10 font-bold">
+                        {t.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}
                       </td>
                     </tr>
                   ))}

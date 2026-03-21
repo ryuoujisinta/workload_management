@@ -14,8 +14,17 @@ export type UserStats = {
   total: number
 }
 
+export type TaskStats = {
+  id: string
+  name: string
+  projectName: string
+  months: MonthlyStats
+  total: number
+}
+
 export type ProjectStatsResult = {
   users: UserStats[]
+  tasks: TaskStats[]
   monthTotals: MonthlyStats
   grandTotal: number
   projects: { id: string, name: string }[]
@@ -66,6 +75,13 @@ export async function getProjectStats(year: number, projectId?: string): Promise
     include: {
       user: {
         select: { id: true, name: true }
+      },
+      task: {
+        select: { 
+          id: true, 
+          name: true,
+          project: { select: { name: true } }
+        }
       }
     }
   })
@@ -73,6 +89,7 @@ export async function getProjectStats(year: number, projectId?: string): Promise
   // 4. 集計
   const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
   const userMap: Record<string, UserStats> = {}
+  const taskMap: Record<string, TaskStats> = {}
   const monthTotals: MonthlyStats = {}
   months.forEach(m => monthTotals[m] = 0)
   let grandTotal = 0
@@ -81,6 +98,7 @@ export async function getProjectStats(year: number, projectId?: string): Promise
     const d = new Date(w.date)
     const month = String(d.getMonth() + 1).padStart(2, "0")
     
+    // ユーザー別の集計
     if (!userMap[w.userId]) {
       userMap[w.userId] = {
         id: w.userId,
@@ -90,18 +108,38 @@ export async function getProjectStats(year: number, projectId?: string): Promise
       }
       months.forEach(m => userMap[w.userId].months[m] = 0)
     }
-
     userMap[w.userId].months[month] += w.hours
     userMap[w.userId].total += w.hours
+
+    // タスク別の集計
+    if (!taskMap[w.taskId]) {
+      taskMap[w.taskId] = {
+        id: w.taskId,
+        name: w.task.name,
+        projectName: (w.task as any).project.name,
+        months: {},
+        total: 0
+      }
+      months.forEach(m => taskMap[w.taskId].months[m] = 0)
+    }
+    taskMap[w.taskId].months[month] += w.hours
+    taskMap[w.taskId].total += w.hours
+
     monthTotals[month] += w.hours
     grandTotal += w.hours
   })
 
-  // 並び替え (ユーザー名順など)
+  // 並び替え (ユーザー名順、またはプロジェクト名+タスク名順)
   const users = Object.values(userMap).sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+  const tasks = Object.values(taskMap).sort((a, b) => {
+    const pComp = a.projectName.localeCompare(b.projectName, 'ja')
+    if (pComp !== 0) return pComp
+    return a.name.localeCompare(b.name, 'ja')
+  })
 
   return {
     users,
+    tasks,
     monthTotals,
     grandTotal,
     projects
