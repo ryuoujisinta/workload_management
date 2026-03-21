@@ -53,6 +53,18 @@ export default async function AdminDashboardPage() {
             </LinkButton>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>プロジェクト別集計</CardTitle>
+            <CardDescription>プロジェクトごとの工数実績を年度・月別に集計します。</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LinkButton href="/admin/projects/stats" className="w-full">
+              集計画面へ
+            </LinkButton>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
