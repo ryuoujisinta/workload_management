@@ -16,12 +16,19 @@ test.describe('Admin Task Management (タスク管理)', () => {
     const projectName = `E2Eプロジェクト_${Date.now()}`
     const taskName = `E2Eタスク_${Date.now()}`
 
-    await page.getByLabel('プロジェクト名').fill(projectName)
-    await page.getByLabel('タスク名').fill(taskName)
-    await page.getByRole('button', { name: '登録する' }).click()
+    // 1. プロジェクト登録
+    const projectForm = page.locator('form').filter({ hasText: 'プロジェクト名' })
+    await projectForm.getByLabel('プロジェクト名').fill(projectName)
+    await projectForm.getByRole('button', { name: '登録する' }).click()
+
+    // 2. タスク登録 (プロジェクトを選択してタスク名を入力)
+    const taskForm = page.locator('form').filter({ has: page.getByLabel('タスク名') })
+    await taskForm.getByLabel('プロジェクト', { exact: true }).selectOption({ label: projectName })
+    await taskForm.getByLabel('タスク名').fill(taskName)
+    await taskForm.getByRole('button', { name: '登録する' }).click()
 
     // ページがリフレッシュされ、登録したタスクが一覧に表示される
-    await expect(page.getByText(projectName)).toBeVisible()
-    await expect(page.getByText(taskName)).toBeVisible()
+    await expect(page.getByRole('cell', { name: projectName })).toBeVisible()
+    await expect(page.getByRole('cell', { name: taskName })).toBeVisible()
   })
 })

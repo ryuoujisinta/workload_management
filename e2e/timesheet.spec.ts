@@ -53,13 +53,10 @@ test.describe('User Timesheet (工数タイムシート)', () => {
   })
 
   test('マイタスクがない場合は案内メッセージが表示される', async ({ page }) => {
-    // タスクが未登録の場合のみ表示される
-    const noTaskMsg = page.getByText('マイタスクが1つも登録されていません。')
+    const noTaskMsg = page.getByText(/マイタスクが登録されていません。/)
     const timesheetTable = page.locator('table')
 
-    const hasNoTask = await noTaskMsg.isVisible().catch(() => false)
-    const hasTable = await timesheetTable.isVisible().catch(() => false)
-
-    expect(hasNoTask || hasTable).toBe(true)
+    // `or` locator を使ってどちらかが表示されるまで待機する
+    await expect(noTaskMsg.or(timesheetTable).first()).toBeVisible()
   })
 })
