@@ -44,6 +44,14 @@ export default async function AdminUserTimesheetPage({
     hoursMap[wl.taskId][wl.date] = wl.hours
   })
 
+  // Determine the status of each day
+  const dayStatusMap: Record<string, string> = {}
+  data.workloads.forEach(wl => {
+    if (!dayStatusMap[wl.date] || wl.status === 'APPROVED') {
+      dayStatusMap[wl.date] = wl.status
+    }
+  })
+
   // Calculate totals
   const dailyTotals: Record<string, number> = {}
   const taskTotals: Record<string, number> = {}
@@ -119,9 +127,11 @@ export default async function AdminUserTimesheetPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {days.map(d => (
-                    <tr key={d.day} className="hover:bg-muted/50 transition-colors">
-                      <td className="p-3 border-r bg-background/95 sticky left-0 z-10 font-medium">
+                  {days.map(d => {
+                    const isApproved = dayStatusMap[d.dateStr] === "APPROVED"
+                    return (
+                    <tr key={d.day} className={`transition-colors ${isApproved ? "bg-green-100/80 hover:bg-green-200/60 dark:bg-green-900/30 dark:hover:bg-green-900/40" : "hover:bg-muted/50"}`}>
+                      <td className={`p-3 border-r sticky left-0 z-10 font-medium ${isApproved ? "bg-green-200/80 dark:bg-green-800/50" : "bg-background/95"}`}>
                         {monthNum}/{d.day}
                       </td>
                       {data.tasks.map(t => {
@@ -132,11 +142,11 @@ export default async function AdminUserTimesheetPage({
                           </td>
                         )
                       })}
-                      <td className="p-3 font-bold bg-muted/20 sticky right-0 z-10">
+                      <td className={`p-3 font-bold sticky right-0 z-10 ${isApproved ? "bg-green-200/80 dark:bg-green-800/50" : "bg-muted/20"}`}>
                         {dailyTotals[d.dateStr] > 0 ? dailyTotals[d.dateStr].toFixed(1) : "-"}
                       </td>
                     </tr>
-                  ))}
+                  )})}
                   <tr className="bg-muted/50 font-bold border-t-2">
                     <td className="p-3 border-r bg-muted sticky left-0 z-10">タスク別合計</td>
                     {data.tasks.map(t => (
