@@ -127,6 +127,22 @@ export default function TimesheetTable({ tasks, dates, initialWorkloads, targetM
               })}
             </tr>
           ))}
+          {/* Total Hours Row */}
+          <tr className="bg-muted/10 border-b">
+            <td className="p-3 border-r font-bold text-right text-sm">合計時間</td>
+            {dates.map(date => {
+              const totalHours = tasks.reduce((sum, task) => {
+                const val = parseFloat(hoursGrid[date][task.id] || "0");
+                return sum + (isNaN(val) ? 0 : val);
+              }, 0);
+              const isOutOfMonth = date.slice(0, 7) !== targetMonth;
+              return (
+                <td key={`total-${date}`} className={`p-3 text-center border-r font-bold text-sm ${isOutOfMonth ? "opacity-50 bg-black/5 dark:bg-white/5" : ""}`}>
+                  {totalHours > 0 ? totalHours : "-"}
+                </td>
+              )
+            })}
+          </tr>
           {/* Action Buttons Row */}
           <tr className="bg-muted/20">
             <td className="p-3 border-r font-bold text-right text-muted-foreground">アクション</td>
