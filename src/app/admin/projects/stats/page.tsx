@@ -21,6 +21,7 @@ export default async function ProjectStatsPage(props: {
   
   const selectedYear = searchParams?.year ? parseInt(searchParams.year, 10) : currentYear
   const selectedProjectId = searchParams?.projectId || undefined
+  const selectedTab = (searchParams as any)?.tab || "user"
 
   // データ取得
   const stats = await getProjectStats(selectedYear, selectedProjectId)
@@ -29,6 +30,14 @@ export default async function ProjectStatsPage(props: {
   const years = Array.from({ length: 11 }).map((_, i) => currentYear - 5 + i)
   
   const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+
+  const getTabUrl = (tab: string) => {
+    const params = new URLSearchParams()
+    params.set("year", selectedYear.toString())
+    if (selectedProjectId) params.set("projectId", selectedProjectId)
+    params.set("tab", tab)
+    return `?${params.toString()}`
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
@@ -51,7 +60,7 @@ export default async function ProjectStatsPage(props: {
               <Label>集計年度</Label>
               <div className="flex items-center gap-2">
                 <LinkButton 
-                  href={`?year=${selectedYear - 1}${selectedProjectId ? `&projectId=${selectedProjectId}` : ""}`}
+                  href={`?year=${selectedYear - 1}${selectedProjectId ? `&projectId=${selectedProjectId}` : ""}${selectedTab !== 'user' ? `&tab=${selectedTab}` : ""}`}
                   variant="outline"
                   size="sm"
                 >
@@ -61,7 +70,7 @@ export default async function ProjectStatsPage(props: {
                   {selectedYear}年度
                 </div>
                 <LinkButton 
-                  href={`?year=${selectedYear + 1}${selectedProjectId ? `&projectId=${selectedProjectId}` : ""}`}
+                  href={`?year=${selectedYear + 1}${selectedProjectId ? `&projectId=${selectedProjectId}` : ""}${selectedTab !== 'user' ? `&tab=${selectedTab}` : ""}`}
                   variant="outline"
                   size="sm"
                 >
@@ -73,6 +82,7 @@ export default async function ProjectStatsPage(props: {
 
           <form className="flex items-end gap-4 w-full md:w-auto">
             <input type="hidden" name="year" value={selectedYear} />
+            <input type="hidden" name="tab" value={selectedTab} />
             <div className="space-y-2 flex-1 md:w-64">
               <Label htmlFor="projectId">プロジェクト</Label>
               <select 
@@ -95,190 +105,221 @@ export default async function ProjectStatsPage(props: {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {stats.users.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              該当するデータが見つかりませんでした。
-            </div>
-          ) : (
-            <div className="border rounded-md overflow-x-auto">
-              {/* Existing User Table */}
-              <table className="w-full text-sm text-center border-collapse">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="p-3 font-medium text-left border-b border-r sticky left-0 bg-muted z-10 w-40">ユーザー名</th>
-                    {months.map(m => (
-                      <th key={m} className="p-3 font-medium border-b min-w-[70px]">{parseInt(m)}月</th>
-                    ))}
-                    <th className="p-3 font-medium border-b border-l bg-muted/30 sticky right-0 z-10 w-24">合計</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y text-right">
-                  {stats.users.map(u => (
-                    <tr key={u.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="p-3 text-left border-r sticky left-0 bg-background z-10 font-medium">{u.name}</td>
-                      {months.map(m => (
-                        <td key={m} className="p-3 border-r last:border-r-0">
-                          {u.months[m] > 0 ? u.months[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
-                        </td>
-                      ))}
-                      <td className="p-3 border-l bg-muted/5 sticky right-0 z-10 font-bold">
-                        {u.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-muted/30 font-bold text-right border-t-2">
-                  <tr>
-                    <td className="p-3 text-left border-r sticky left-0 bg-muted z-10">合計</td>
-                    {months.map(m => (
-                      <td key={m} className="p-3 border-r last:border-r-0">
-                        {stats.monthTotals[m] > 0 ? stats.monthTotals[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
-                      </td>
-                    ))}
-                    <td className="p-3 border-l bg-muted/30 sticky right-0 z-10">
-                      {stats.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="flex border-b">
+        <LinkButton 
+          href={getTabUrl("user")} 
+          variant={selectedTab === "user" ? "default" : "ghost"}
+          className={`rounded-b-none ${selectedTab === "user" ? "" : "border-transparent"}`}
+        >
+          ユーザー別
+        </LinkButton>
+        <LinkButton 
+          href={getTabUrl("task")} 
+          variant={selectedTab === "task" ? "default" : "ghost"}
+          className={`rounded-b-none ${selectedTab === "task" ? "" : "border-transparent"}`}
+        >
+          タスク別
+        </LinkButton>
+        <LinkButton 
+          href={getTabUrl("taskUser")} 
+          variant={selectedTab === "taskUser" ? "default" : "ghost"}
+          className={`rounded-b-none ${selectedTab === "taskUser" ? "" : "border-transparent"}`}
+        >
+          タスク×ユーザー別
+        </LinkButton>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            タスク別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {stats.tasks.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              該当するデータが見つかりませんでした。
-            </div>
-          ) : (
-            <div className="border rounded-md overflow-x-auto">
-              <table className="w-full text-sm text-center border-collapse">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="p-3 font-medium text-left border-b border-r sticky left-0 bg-muted z-10 w-64">プロジェクト / タスク名</th>
-                    {months.map(m => (
-                      <th key={m} className="p-3 font-medium border-b min-w-[70px]">{parseInt(m)}月</th>
+      {selectedTab === "user" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.users.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                該当するデータが見つかりませんでした。
+              </div>
+            ) : (
+              <div className="border rounded-md overflow-x-auto">
+                {/* Existing User Table */}
+                <table className="w-full text-sm text-center border-collapse">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="p-3 font-medium text-left border-b border-r sticky left-0 bg-muted z-10 w-40">ユーザー名</th>
+                      {months.map(m => (
+                        <th key={m} className="p-3 font-medium border-b min-w-[70px]">{parseInt(m)}月</th>
+                      ))}
+                      <th className="p-3 font-medium border-b border-l bg-muted/30 sticky right-0 z-10 w-24">合計</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y text-right">
+                    {stats.users.map(u => (
+                      <tr key={u.id} className="hover:bg-muted/50 transition-colors">
+                        <td className="p-3 text-left border-r sticky left-0 bg-background z-10 font-medium">{u.name}</td>
+                        {months.map(m => (
+                          <td key={m} className="p-3 border-r last:border-r-0">
+                            {u.months[m] > 0 ? u.months[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                          </td>
+                        ))}
+                        <td className="p-3 border-l bg-muted/5 sticky right-0 z-10 font-bold">
+                          {u.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                        </td>
+                      </tr>
                     ))}
-                    <th className="p-3 font-medium border-b border-l bg-muted/30 sticky right-0 z-10 w-24">合計</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y text-right">
-                  {stats.tasks.map(t => (
-                    <tr key={t.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="p-3 text-left border-r sticky left-0 bg-background z-10 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-64">
-                        <div className="text-xs text-muted-foreground">{t.projectName}</div>
-                        <div>{t.name}</div>
-                      </td>
+                  </tbody>
+                  <tfoot className="bg-muted/30 font-bold text-right border-t-2">
+                    <tr>
+                      <td className="p-3 text-left border-r sticky left-0 bg-muted z-10">合計</td>
                       {months.map(m => (
                         <td key={m} className="p-3 border-r last:border-r-0">
-                          {t.months[m] > 0 ? t.months[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                          {stats.monthTotals[m] > 0 ? stats.monthTotals[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
                         </td>
                       ))}
-                      <td className="p-3 border-l bg-muted/5 sticky right-0 z-10 font-bold">
-                        {t.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                      <td className="p-3 border-l bg-muted/30 sticky right-0 z-10">
+                        {stats.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1 })}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot className="bg-muted/30 font-bold text-right border-t-2">
-                  <tr>
-                    <td className="p-3 text-left border-r sticky left-0 bg-muted z-10">合計</td>
-                    {months.map(m => (
-                      <td key={m} className="p-3 border-r last:border-r-0">
-                        {stats.monthTotals[m] > 0 ? stats.monthTotals[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
-                      </td>
-                    ))}
-                    <td className="p-3 border-l bg-muted/30 sticky right-0 z-10">
-                      {stats.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            タスク×ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {stats.taskUserStats.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              該当するデータが見つかりませんでした。
-            </div>
-          ) : (
-            <div className="border rounded-md overflow-x-auto">
-              <table className="w-full text-sm text-center border-collapse">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="p-3 font-medium text-left border-b border-r sticky left-0 bg-muted z-10 w-48">プロジェクト / タスク名</th>
-                    <th className="p-3 font-medium text-left border-b border-r sticky left-48 bg-muted z-10 w-32">ユーザー名</th>
-                    {months.map(m => (
-                      <th key={m} className="p-3 font-medium border-b min-w-[70px]">{parseInt(m)}月</th>
-                    ))}
-                    <th className="p-3 font-medium border-b border-l bg-muted/30 sticky right-0 z-10 w-24">合計</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y text-right">
-                  {stats.taskUserStats.map(t => (
-                    <Fragment key={t.taskId}>
-                      {t.users.map((u, uIdx) => (
-                        <tr key={`${t.taskId}-${u.userId}`} className="hover:bg-muted/50 transition-colors">
-                          {uIdx === 0 && (
-                            <td rowSpan={t.users.length} className="p-3 text-left border-r sticky left-0 bg-background z-10 font-medium align-top whitespace-nowrap overflow-hidden text-ellipsis max-w-48">
-                              <div className="text-xs text-muted-foreground">{t.projectName}</div>
-                              <div>{t.taskName}</div>
-                            </td>
-                          )}
-                          <td className="p-3 text-left border-r sticky left-48 bg-background z-10 font-medium">{u.userName}</td>
-                          {months.map(m => (
-                            <td key={m} className="p-3 border-r last:border-r-0">
-                              {u.months[m] > 0 ? u.months[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
-                            </td>
-                          ))}
-                          <td className="p-3 border-l bg-muted/5 sticky right-0 z-10 font-bold">
-                            {u.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                          </td>
-                        </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedTab === "task" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              タスク別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.tasks.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                該当するデータが見つかりませんでした。
+              </div>
+            ) : (
+              <div className="border rounded-md overflow-x-auto">
+                <table className="w-full text-sm text-center border-collapse">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="p-3 font-medium text-left border-b border-r sticky left-0 bg-muted z-10 w-64">プロジェクト / タスク名</th>
+                      {months.map(m => (
+                        <th key={m} className="p-3 font-medium border-b min-w-[70px]">{parseInt(m)}月</th>
                       ))}
-                    </Fragment>
-                  ))}
-                </tbody>
-                <tfoot className="bg-muted/30 font-bold text-right border-t-2">
-                  <tr>
-                    <td colSpan={2} className="p-3 text-left border-r sticky left-0 bg-muted z-10">合計</td>
-                    {months.map(m => (
-                      <td key={m} className="p-3 border-r last:border-r-0">
-                        {stats.monthTotals[m] > 0 ? stats.monthTotals[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
-                      </td>
+                      <th className="p-3 font-medium border-b border-l bg-muted/30 sticky right-0 z-10 w-24">合計</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y text-right">
+                    {stats.tasks.map(t => (
+                      <tr key={t.id} className="hover:bg-muted/50 transition-colors">
+                        <td className="p-3 text-left border-r sticky left-0 bg-background z-10 font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-64">
+                          <div className="text-xs text-muted-foreground">{t.projectName}</div>
+                          <div>{t.name}</div>
+                        </td>
+                        {months.map(m => (
+                          <td key={m} className="p-3 border-r last:border-r-0">
+                            {t.months[m] > 0 ? t.months[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                          </td>
+                        ))}
+                        <td className="p-3 border-l bg-muted/5 sticky right-0 z-10 font-bold">
+                          {t.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                        </td>
+                      </tr>
                     ))}
-                    <td className="p-3 border-l bg-muted/30 sticky right-0 z-10">
-                      {stats.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1 })}
-                    </td>
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </tbody>
+                  <tfoot className="bg-muted/30 font-bold text-right border-t-2">
+                    <tr>
+                      <td className="p-3 text-left border-r sticky left-0 bg-muted z-10">合計</td>
+                      {months.map(m => (
+                        <td key={m} className="p-3 border-r last:border-r-0">
+                          {stats.monthTotals[m] > 0 ? stats.monthTotals[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                        </td>
+                      ))}
+                      <td className="p-3 border-l bg-muted/30 sticky right-0 z-10">
+                        {stats.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {selectedTab === "taskUser" && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              タスク×ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.taskUserStats.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                該当するデータが見つかりませんでした。
+              </div>
+            ) : (
+              <div className="border rounded-md overflow-x-auto">
+                <table className="w-full text-sm text-center border-collapse">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="p-3 font-medium text-left border-b border-r sticky left-0 bg-muted z-10 w-48">プロジェクト / タスク名</th>
+                      <th className="p-3 font-medium text-left border-b border-r sticky left-48 bg-muted z-10 w-32">ユーザー名</th>
+                      {months.map(m => (
+                        <th key={m} className="p-3 font-medium border-b min-w-[70px]">{parseInt(m)}月</th>
+                      ))}
+                      <th className="p-3 font-medium border-b border-l bg-muted/30 sticky right-0 z-10 w-24">合計</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y text-right">
+                    {stats.taskUserStats.map(t => (
+                      <Fragment key={t.taskId}>
+                        {t.users.map((u, uIdx) => (
+                          <tr key={`${t.taskId}-${u.userId}`} className="hover:bg-muted/50 transition-colors">
+                            {uIdx === 0 && (
+                              <td rowSpan={t.users.length} className="p-3 text-left border-r sticky left-0 bg-background z-10 font-medium align-top whitespace-nowrap overflow-hidden text-ellipsis max-w-48">
+                                <div className="text-xs text-muted-foreground">{t.projectName}</div>
+                                <div>{t.taskName}</div>
+                              </td>
+                            )}
+                            <td className="p-3 text-left border-r sticky left-48 bg-background z-10 font-medium">{u.userName}</td>
+                            {months.map(m => (
+                              <td key={m} className="p-3 border-r last:border-r-0">
+                                {u.months[m] > 0 ? u.months[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                              </td>
+                            ))}
+                            <td className="p-3 border-l bg-muted/5 sticky right-0 z-10 font-bold">
+                              {u.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                            </td>
+                          </tr>
+                        ))}
+                      </Fragment>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-muted/30 font-bold text-right border-t-2">
+                    <tr>
+                      <td colSpan={2} className="p-3 text-left border-r sticky left-0 bg-muted z-10">合計</td>
+                      {months.map(m => (
+                        <td key={m} className="p-3 border-r last:border-r-0">
+                          {stats.monthTotals[m] > 0 ? stats.monthTotals[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                        </td>
+                      ))}
+                      <td className="p-3 border-l bg-muted/30 sticky right-0 z-10">
+                        {stats.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
