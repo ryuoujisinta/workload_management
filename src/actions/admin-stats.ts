@@ -14,17 +14,23 @@ export type UserStats = {
   total: number
 }
 
-export type TaskStats = {
-  id: string
-  name: string
+export type TaskUserStats = {
+  taskId: string
+  taskName: string
   projectName: string
-  months: MonthlyStats
+  users: {
+    userId: string
+    userName: string
+    months: MonthlyStats
+    total: number
+  }[]
   total: number
 }
 
 export type ProjectStatsResult = {
   users: UserStats[]
   tasks: TaskStats[]
+  taskUserStats: TaskUserStats[]
   monthTotals: MonthlyStats
   grandTotal: number
   projects: { id: string, name: string }[]
@@ -90,6 +96,7 @@ export async function getProjectStats(year: number, projectId?: string): Promise
   const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
   const userMap: Record<string, UserStats> = {}
   const taskMap: Record<string, TaskStats> = {}
+  const taskUserMap: Record<string, Record<string, { userId: string, userName: string, months: MonthlyStats, total: number }>> = {}
   const monthTotals: MonthlyStats = {}
   months.forEach(m => monthTotals[m] = 0)
   let grandTotal = 0
@@ -125,6 +132,22 @@ export async function getProjectStats(year: number, projectId?: string): Promise
     taskMap[w.taskId].months[month] += w.hours
     taskMap[w.taskId].total += w.hours
 
+    // タスク×ユーザー別の集計
+    if (!taskUserMap[w.taskId]) {
+      taskUserMap[w.taskId] = {}
+    }
+    if (!taskUserMap[w.taskId][w.userId]) {
+      taskUserMap[w.taskId][w.userId] = {
+        userId: w.userId,
+        userName: w.user.name,
+        months: {},
+        total: 0
+      }
+      months.forEach(m => taskUserMap[w.taskId][w.userId].months[m] = 0)
+    }
+    taskUserMap[w.taskId][w.userId].months[month] += w.hours
+    taskUserMap[w.taskId][w.userId].total += w.hours
+
     monthTotals[month] += w.hours
     grandTotal += w.hours
   })
@@ -137,9 +160,22 @@ export async function getProjectStats(year: number, projectId?: string): Promise
     return a.name.localeCompare(b.name, 'ja')
   })
 
+  // タスク×ユーザー別の集計結果を整形
+  const taskUserStats: TaskUserStats[] = tasks.map(t => {
+    const usersInTask = Object.values(taskUserMap[t.id] || {}).sort((a, b) => a.userName.localeCompare(b.userName, 'ja'))
+    return {
+      taskId: t.id,
+      taskName: t.name,
+      projectName: t.projectName,
+      users: usersInTask,
+      total: t.total
+    }
+  })
+
   return {
     users,
     tasks,
+    taskUserStats,
     monthTotals,
     grandTotal,
     projects

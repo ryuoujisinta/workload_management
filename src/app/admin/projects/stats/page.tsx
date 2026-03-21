@@ -1,3 +1,4 @@
+import { Fragment } from "react"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
@@ -196,6 +197,73 @@ export default async function ProjectStatsPage(props: {
                 <tfoot className="bg-muted/30 font-bold text-right border-t-2">
                   <tr>
                     <td className="p-3 text-left border-r sticky left-0 bg-muted z-10">合計</td>
+                    {months.map(m => (
+                      <td key={m} className="p-3 border-r last:border-r-0">
+                        {stats.monthTotals[m] > 0 ? stats.monthTotals[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                      </td>
+                    ))}
+                    <td className="p-3 border-l bg-muted/30 sticky right-0 z-10">
+                      {stats.grandTotal.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            タスク×ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.taskUserStats.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              該当するデータが見つかりませんでした。
+            </div>
+          ) : (
+            <div className="border rounded-md overflow-x-auto">
+              <table className="w-full text-sm text-center border-collapse">
+                <thead className="bg-muted">
+                  <tr>
+                    <th className="p-3 font-medium text-left border-b border-r sticky left-0 bg-muted z-10 w-48">プロジェクト / タスク名</th>
+                    <th className="p-3 font-medium text-left border-b border-r sticky left-48 bg-muted z-10 w-32">ユーザー名</th>
+                    {months.map(m => (
+                      <th key={m} className="p-3 font-medium border-b min-w-[70px]">{parseInt(m)}月</th>
+                    ))}
+                    <th className="p-3 font-medium border-b border-l bg-muted/30 sticky right-0 z-10 w-24">合計</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y text-right">
+                  {stats.taskUserStats.map(t => (
+                    <Fragment key={t.taskId}>
+                      {t.users.map((u, uIdx) => (
+                        <tr key={`${t.taskId}-${u.userId}`} className="hover:bg-muted/50 transition-colors">
+                          {uIdx === 0 && (
+                            <td rowSpan={t.users.length} className="p-3 text-left border-r sticky left-0 bg-background z-10 font-medium align-top whitespace-nowrap overflow-hidden text-ellipsis max-w-48">
+                              <div className="text-xs text-muted-foreground">{t.projectName}</div>
+                              <div>{t.taskName}</div>
+                            </td>
+                          )}
+                          <td className="p-3 text-left border-r sticky left-48 bg-background z-10 font-medium">{u.userName}</td>
+                          {months.map(m => (
+                            <td key={m} className="p-3 border-r last:border-r-0">
+                              {u.months[m] > 0 ? u.months[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
+                            </td>
+                          ))}
+                          <td className="p-3 border-l bg-muted/5 sticky right-0 z-10 font-bold">
+                            {u.total.toLocaleString(undefined, { minimumFractionDigits: 1 })}
+                          </td>
+                        </tr>
+                      ))}
+                    </Fragment>
+                  ))}
+                </tbody>
+                <tfoot className="bg-muted/30 font-bold text-right border-t-2">
+                  <tr>
+                    <td colSpan={2} className="p-3 text-left border-r sticky left-0 bg-muted z-10">合計</td>
                     {months.map(m => (
                       <td key={m} className="p-3 border-r last:border-r-0">
                         {stats.monthTotals[m] > 0 ? stats.monthTotals[m].toLocaleString(undefined, { minimumFractionDigits: 1 }) : "-"}
