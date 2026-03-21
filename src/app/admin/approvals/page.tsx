@@ -11,7 +11,7 @@ export default async function AdminApprovalsPage() {
 
   const workloads = await prisma.workload.findMany({
     where: { status: { in: ["PENDING", "APPROVED"] } },
-    include: { user: true, task: true },
+    include: { user: true, task: { include: { project: true } } },
     orderBy: { date: "desc" }
   })
 
@@ -30,7 +30,7 @@ export default async function AdminApprovalsPage() {
       }
     }
     acc[key].totalHours += w.hours
-    acc[key].details.push(`[${w.task.project}] ${w.task.name} (${w.hours}h)`)
+    acc[key].details.push(`[${w.task.project?.name || ''}] ${w.task.name} (${w.hours}h)`)
     return acc
   }, {} as Record<string, any>)
 

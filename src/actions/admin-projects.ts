@@ -4,31 +4,27 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
-export async function createTask(formData: FormData) {
+export async function createProject(formData: FormData) {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized")
 
-  const projectId = formData.get("projectId") as string
   const name = formData.get("name") as string
-  const targetMonth = formData.get("targetMonth") as string
 
-  if (!projectId || !name || !targetMonth) throw new Error("Invalid data")
+  if (!name) throw new Error("Invalid data")
 
-  await prisma.task.create({
+  await prisma.project.create({
     data: {
-      projectId,
       name,
-      targetMonth
     }
   })
 
   revalidatePath("/admin/tasks")
 }
 
-export async function deleteTask(taskId: string) {
+export async function deleteProject(projectId: string) {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized")
 
-  await prisma.task.delete({ where: { id: taskId } })
+  await prisma.project.delete({ where: { id: projectId } })
   revalidatePath("/admin/tasks")
 }

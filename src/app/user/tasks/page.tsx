@@ -43,7 +43,8 @@ export default async function UserTasksPage(props: {
   // --- データ取得 (選択月のタスクのみ) ---
   const availableTasks = await prisma.task.findMany({
     where: { targetMonth: selectedMonthStr },
-    orderBy: { project: "asc" },
+    include: { project: true },
+    orderBy: { project: { name: "asc" } },
   })
 
   const userTasks = await prisma.userTask.findMany({
@@ -82,7 +83,7 @@ export default async function UserTasksPage(props: {
             <Card key={task.id} className={isAdded ? "ring-2 ring-primary border-primary" : ""}>
               <CardHeader className="pb-3">
                 <div className="text-xs text-muted-foreground">{task.targetMonth}</div>
-                <CardTitle className="text-lg">{task.project}</CardTitle>
+                <CardTitle className="text-lg">{task.project?.name}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm font-medium mb-4">{task.name}</p>

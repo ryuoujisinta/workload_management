@@ -31,14 +31,24 @@ model User {
   workloads    Workload[]
 }
 
+model Project {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tasks       Task[]
+}
+
 model Task {
   id          String   @id @default(cuid())
-  project     String
+  projectId   String
   name        String
   targetMonth String   // e.g. "2026-03"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   userTasks   UserTask[]
   workloads   Workload[]
 }

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LinkButton } from "@/components/link-button"
 import { createTask, deleteTask } from "@/actions/admin-tasks"
+import { createProject } from "@/actions/admin-projects"
 
 export default async function AdminTasksPage(props: {
   searchParams?: Promise<{ month?: string }>
@@ -45,7 +46,13 @@ export default async function AdminTasksPage(props: {
   // --- 選択月のタスクを取得 ---
   const tasks = await prisma.task.findMany({
     where: { targetMonth: selectedMonthStr },
-    orderBy: { project: "asc" },
+    include: { project: true },
+    orderBy: { project: { name: "asc" } },
+  })
+
+  // --- 全プロジェクトを取得 ---
+  const projects = await prisma.project.findMany({
+    orderBy: { name: "asc" }
   })
 
   return (
@@ -89,7 +96,7 @@ export default async function AdminTasksPage(props: {
                 <tbody className="divide-y">
                   {tasks.map((t) => (
                     <tr key={t.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="p-3">{t.project}</td>
+                      <td className="p-3">{t.project?.name}</td>
                       <td className="p-3">{t.name}</td>
                       <td className="p-3 text-right">
                         <form action={deleteTask.bind(null, t.id)} className="inline">
@@ -113,28 +120,58 @@ export default async function AdminTasksPage(props: {
           </CardContent>
         </Card>
 
-        {/* 新規タスク登録フォーム */}
-        <Card className="order-1 md:order-2 h-fit">
-          <CardHeader>
-            <CardTitle>新規タスク登録</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form action={createTask} className="space-y-4">
-              <input type="hidden" name="targetMonth" value={selectedMonthStr} />
-              <div className="space-y-2">
-                <Label htmlFor="project">プロジェクト名</Label>
-                <Input id="project" name="project" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="name">タスク名</Label>
-                <Input id="name" name="name" required />
-              </div>
-              <Button type="submit" className="w-full mt-2">
-                登録する
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+        <div className="order-1 md:order-2 space-y-6 flex flex-col">
+          {/* 新規プロジェクト登録フォーム */}
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>新規プロジェクト登録</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form action={createProject} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="projectName">プロジェクト名</Label>
+                  <Input id="projectName" name="name" required />
+                </div>
+                <Button type="submit" className="w-full mt-2">
+                  登録する
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* 新規タスク登録フォーム */}
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>新規タスク登録</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form action={createTask} className="space-y-4">
+                <input type="hidden" name="targetMonth" value={selectedMonthStr} />
+                <div className="space-y-2">
+                  <Label htmlFor="projectId">プロジェクト</Label>
+                  <select 
+                    id="projectId" 
+                    name="projectId" 
+                    required 
+                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">選択してください</option>
+                    {projects.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">タスク名</Label>
+                  <Input id="name" name="name" required />
+                </div>
+                <Button type="submit" className="w-full mt-2">
+                  登録する
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )

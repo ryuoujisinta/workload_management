@@ -1,13 +1,15 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { Task, Workload } from "@prisma/client"
+import { Prisma, Workload } from "@prisma/client"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { saveWorkload, submitDay, cancelSubmitDay } from "@/actions/timesheet"
 
+type TaskWithProject = Prisma.TaskGetPayload<{ include: { project: true } }>
+
 type Props = {
-  tasks: Task[]
+  tasks: TaskWithProject[]
   dates: string[]
   initialWorkloads: Workload[]
   targetMonth: string
@@ -104,7 +106,7 @@ export default function TimesheetTable({ tasks, dates, initialWorkloads, targetM
           {tasks.map(task => (
             <tr key={task.id} className="border-b">
               <td className="p-3 border-r font-medium text-xs break-words">
-                <span className="text-muted-foreground mr-1">[{task.project}]</span>
+                <span className="text-muted-foreground mr-1">[{task.project?.name}]</span>
                 <br/>{task.name}
               </td>
               {dates.map(date => {
