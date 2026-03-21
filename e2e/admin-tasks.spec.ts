@@ -40,4 +40,32 @@ test.describe('Admin Task Management (タスク管理)', () => {
     // クリック後は「✓ 当月有効」に変わるはず
     await expect(page.getByRole('button', { name: '✓ 当月有効' }).last()).toBeVisible()
   })
+
+  test('プロジェクトを削除できる', async ({ page }) => {
+    const projectName = `DeleteTest_${Date.now()}`
+    
+    // 1. プロジェクト登録
+    const projectForm = page.locator('form').filter({ hasText: 'プロジェクト名' })
+    await projectForm.getByLabel('プロジェクト名').fill(projectName)
+    await Promise.all([
+      page.waitForResponse(res => res.url().includes('/admin/tasks') && res.status() === 200),
+      projectForm.getByRole('button', { name: '登録する' }).click()
+    ])
+
+    // 2. 登録されたことを確認
+    await page.reload()
+    await expect(page.getByText(projectName).first()).toBeVisible()
+
+    // 3. 削除ボタンをクリック
+    // confirmダイアログを自動的に承諾するように設定
+    page.on('dialog', dialog => dialog.accept())
+    
+    // プロジェクト行を特定して削除ボタンをクリック
+    const projectRow = page.locator('div').filter({ hasText: projectName }).filter({ has: page.getByRole('button', { name: '削除' }) }).last()
+    await projectRow.getByRole('button', { name: '削除' }).click()
+
+    // 4. 一覧から消えたことを確認
+    await page.reload()
+    await expect(page.getByText(projectName)).not.toBeVisible()
+  })
 })

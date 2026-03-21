@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LinkButton } from "@/components/link-button"
 import { createTask, deleteTask, toggleMonthlyTask } from "@/actions/admin-tasks"
-import { createProject } from "@/actions/admin-projects"
+import { createProject, deleteProject } from "@/actions/admin-projects"
+import { DeleteButton } from "@/components/delete-button"
 
 export default async function AdminTasksPage(props: {
   searchParams?: Promise<{ month?: string }>
@@ -116,11 +117,15 @@ export default async function AdminTasksPage(props: {
                           </form>
                         </td>
                         <td className="p-3 text-right">
-                          <form action={deleteTask.bind(null, t.id)} className="inline">
-                            <Button type="submit" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" size="sm">
-                              完全削除
-                            </Button>
-                          </form>
+                          <DeleteButton 
+                            formAction={deleteTask.bind(null, t.id)} 
+                            variant="ghost" 
+                            className="text-destructive hover:bg-destructive/10 hover:text-destructive" 
+                            size="sm"
+                            confirmMessage={`タスク「${t.name}」を完全に削除しますか？\nこの操作は取り消せません。`}
+                          >
+                            完全削除
+                          </DeleteButton>
                         </td>
                       </tr>
                     )
@@ -155,6 +160,37 @@ export default async function AdminTasksPage(props: {
                   登録する
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* 登録済みプロジェクト一覧 */}
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>プロジェクト管理</CardTitle>
+              <CardDescription>{selectedYear}年のプロジェクト</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {projects.map(p => (
+                  <div key={p.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+                    <span className="text-sm font-medium">{p.name}</span>
+                    <DeleteButton 
+                      formAction={deleteProject.bind(null, p.id)} 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive h-8 px-2"
+                      confirmMessage={`プロジェクト「${p.name}」を削除しますか？\n関連するタスクもすべて削除されます。`}
+                    >
+                      削除
+                    </DeleteButton>
+                  </div>
+                ))}
+                {projects.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    登録されたプロジェクトはありません。
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
 
