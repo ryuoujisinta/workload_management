@@ -42,15 +42,22 @@ export default async function UserTasksPage(props: {
 
   // --- データ取得 (選択月のタスクのみ) ---
   const availableTasks = await prisma.task.findMany({
-    where: { targetMonth: selectedMonthStr },
+    where: {
+      monthlyTasks: { some: { targetMonth: selectedMonthStr } }
+    },
     include: { project: true },
     orderBy: { project: { name: "asc" } },
   })
 
+  // ユーザーが登録しているタスクのうち、当月有効なもの
   const userTasks = await prisma.userTask.findMany({
     where: {
       userId,
-      task: { targetMonth: selectedMonthStr },
+      task: {
+        is: {
+          monthlyTasks: { some: { targetMonth: selectedMonthStr } }
+        }
+      },
     },
   })
 
@@ -82,7 +89,6 @@ export default async function UserTasksPage(props: {
           return (
             <Card key={task.id} className={isAdded ? "ring-2 ring-primary border-primary" : ""}>
               <CardHeader className="pb-3">
-                <div className="text-xs text-muted-foreground">{task.targetMonth}</div>
                 <CardTitle className="text-lg">{task.project?.name}</CardTitle>
               </CardHeader>
               <CardContent>

@@ -14,7 +14,7 @@ describe('TimesheetTable', () => {
   const mockCancel = cancelSubmitDay as jest.Mock
 
   const tasks: any[] = [
-    { id: 't1', name: 'Task 1', project: { name: 'Proj A' }, targetMonth: '2023-10' }
+    { id: 't1', name: 'Task 1', project: { name: 'Proj A' } }
   ]
   const dates = ['2023-10-15', '2023-10-16']
 

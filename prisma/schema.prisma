@@ -34,6 +34,7 @@ model User {
 model Project {
   id          String   @id @default(cuid())
   name        String   @unique
+  year        Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -44,13 +45,25 @@ model Task {
   id          String   @id @default(cuid())
   projectId   String
   name        String
-  targetMonth String   // e.g. "2026-03"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  monthlyTasks MonthlyTask[]
   userTasks   UserTask[]
   workloads   Workload[]
+}
+
+// 管理者が設定した「該当月に有効なタスク」
+model MonthlyTask {
+  id          String   @id @default(cuid())
+  taskId      String
+  targetMonth String   // e.g. "2026-03"
+  createdAt   DateTime @default(now())
+
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, targetMonth])
 }
 
 // ユーザーが選択した「マイタスク」

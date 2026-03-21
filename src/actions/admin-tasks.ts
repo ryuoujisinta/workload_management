@@ -10,15 +10,13 @@ export async function createTask(formData: FormData) {
 
   const projectId = formData.get("projectId") as string
   const name = formData.get("name") as string
-  const targetMonth = formData.get("targetMonth") as string
 
-  if (!projectId || !name || !targetMonth) throw new Error("Invalid data")
+  if (!projectId || !name) throw new Error("Invalid data")
 
   await prisma.task.create({
     data: {
       projectId,
       name,
-      targetMonth
     }
   })
 
@@ -30,5 +28,25 @@ export async function deleteTask(taskId: string) {
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized")
 
   await prisma.task.delete({ where: { id: taskId } })
+  revalidatePath("/admin/tasks")
+}
+
+export async function toggleMonthlyTask(taskId: string, targetMonth: string, isActive: boolean) {
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized")
+
+  if (isActive) {
+    await prisma.monthlyTask.upsert({
+      where: {
+        taskId_targetMonth: { taskId, targetMonth }
+      },
+      update: {},
+      create: { taskId, targetMonth }
+    })
+  } else {
+    await prisma.monthlyTask.deleteMany({
+      where: { taskId, targetMonth }
+    })
+  }
   revalidatePath("/admin/tasks")
 }

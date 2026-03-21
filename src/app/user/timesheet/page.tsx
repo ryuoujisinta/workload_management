@@ -95,7 +95,11 @@ export default async function UserTimesheetPage(props: {
   const userTasks = await prisma.userTask.findMany({
     where: {
       userId,
-      task: { targetMonth: selectedMonthStr },
+      task: {
+        is: {
+          monthlyTasks: { some: { targetMonth: selectedMonthStr } }
+        }
+      },
     },
     include: { 
       task: {

@@ -30,5 +30,14 @@ test.describe('Admin Task Management (タスク管理)', () => {
     // ページがリフレッシュされ、登録したタスクが一覧に表示される
     await expect(page.getByRole('cell', { name: projectName })).toBeVisible()
     await expect(page.getByRole('cell', { name: taskName })).toBeVisible()
+
+    // 3. 当月の有効設定を切り替える
+    // 初回は「＋ 当月に追加」ボタンが表示されているはず
+    const addButton = page.getByRole('button', { name: '＋ 当月に追加' }).last()
+    await expect(addButton).toBeVisible()
+    await addButton.click()
+
+    // クリック後は「✓ 当月有効」に変わるはず
+    await expect(page.getByRole('button', { name: '✓ 当月有効' }).last()).toBeVisible()
   })
 })

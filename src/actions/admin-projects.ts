@@ -9,12 +9,15 @@ export async function createProject(formData: FormData) {
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized")
 
   const name = formData.get("name") as string
+  const yearStr = formData.get("year") as string
+  const year = parseInt(yearStr, 10)
 
-  if (!name) throw new Error("Invalid data")
+  if (!name || isNaN(year)) throw new Error("Invalid data")
 
   await prisma.project.create({
     data: {
       name,
+      year,
     }
   })
 

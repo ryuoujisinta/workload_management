@@ -32,7 +32,9 @@ export async function getMonthlyUserTimesheet(userId: string, targetMonth: strin
     where: {
       userId,
       task: {
-        targetMonth
+        is: {
+          monthlyTasks: { some: { targetMonth } }
+        }
       }
     },
     include: {

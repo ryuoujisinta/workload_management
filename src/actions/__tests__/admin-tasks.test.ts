@@ -1,4 +1,4 @@
-import { createTask, deleteTask } from '../admin-tasks'
+import { createTask, deleteTask, toggleMonthlyTask } from '../admin-tasks'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
@@ -11,7 +11,18 @@ jest.mock('@/auth', () => ({
   auth: jest.fn(),
 }))
 
-jest.mock('@/lib/prisma')
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    task: {
+      create: jest.fn(),
+      delete: jest.fn(),
+    },
+    monthlyTask: {
+      upsert: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+  },
+}))
 
 describe('admin-tasks', () => {
   const mockAuth = auth as jest.Mock
@@ -36,7 +47,7 @@ describe('admin-tasks', () => {
       
       const formData = new FormData()
       formData.append('projectId', 'proj-123')
-      // missing name and targetMonth
+      // missing name
 
       await expect(createTask(formData)).rejects.toThrow('Invalid data')
     })
@@ -47,9 +58,8 @@ describe('admin-tasks', () => {
       const formData = new FormData()
       formData.append('projectId', 'proj-123')
       formData.append('name', 'Test Task')
-      formData.append('targetMonth', '2024-03')
 
-      mockCreate.mockResolvedValueOnce({ id: '123', projectId: 'proj-123', name: 'Test Task', targetMonth: '2024-03' })
+      mockCreate.mockResolvedValueOnce({ id: '123', projectId: 'proj-123', name: 'Test Task' })
 
       await createTask(formData)
 
@@ -57,7 +67,6 @@ describe('admin-tasks', () => {
         data: {
           projectId: 'proj-123',
           name: 'Test Task',
-          targetMonth: '2024-03'
         }
       })
       expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/tasks')
@@ -79,6 +88,37 @@ describe('admin-tasks', () => {
 
       expect(mockDelete).toHaveBeenCalledWith({
         where: { id: '123' }
+      })
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/tasks')
+    })
+  })
+
+  describe('toggleMonthlyTask', () => {
+    const mockUpsert = prisma.monthlyTask.upsert as jest.Mock
+    const mockDeleteMany = prisma.monthlyTask.deleteMany as jest.Mock
+
+    it('upserts monthly task when isActive is true', async () => {
+      mockAuth.mockResolvedValueOnce({ user: { role: 'ADMIN' } })
+      
+      await toggleMonthlyTask('task-123', '2024-03', true)
+
+      expect(mockUpsert).toHaveBeenCalledWith({
+        where: {
+          taskId_targetMonth: { taskId: 'task-123', targetMonth: '2024-03' }
+        },
+        update: {},
+        create: { taskId: 'task-123', targetMonth: '2024-03' }
+      })
+      expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/tasks')
+    })
+
+    it('deletes monthly task when isActive is false', async () => {
+      mockAuth.mockResolvedValueOnce({ user: { role: 'ADMIN' } })
+      
+      await toggleMonthlyTask('task-123', '2024-03', false)
+
+      expect(mockDeleteMany).toHaveBeenCalledWith({
+        where: { taskId: 'task-123', targetMonth: '2024-03' }
       })
       expect(mockRevalidatePath).toHaveBeenCalledWith('/admin/tasks')
     })

@@ -1,12 +1,12 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/prisma"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LinkButton } from "@/components/link-button"
-import { createTask, deleteTask } from "@/actions/admin-tasks"
+import { createTask, deleteTask, toggleMonthlyTask } from "@/actions/admin-tasks"
 import { createProject } from "@/actions/admin-projects"
 
 export default async function AdminTasksPage(props: {
@@ -43,17 +43,21 @@ export default async function AdminTasksPage(props: {
   const prevMonthStr = formatMonth(prevMonthDate.getFullYear(), prevMonthDate.getMonth() + 1)
   const nextMonthStr = formatMonth(nextMonthDate.getFullYear(), nextMonthDate.getMonth() + 1)
 
-  // --- 選択月のタスクを取得 ---
-  const tasks = await prisma.task.findMany({
-    where: { targetMonth: selectedMonthStr },
-    include: { project: true },
-    orderBy: { project: { name: "asc" } },
-  })
-
-  // --- 全プロジェクトを取得 ---
+  // --- 選択年の全プロジェクトとタスクを取得 ---
   const projects = await prisma.project.findMany({
+    where: { year: selectedYear },
+    include: { tasks: true },
     orderBy: { name: "asc" }
   })
+
+  // テーブル表示用に全タスクを平坦化
+  const allTasks = projects.flatMap(p => p.tasks.map(t => ({ ...t, project: p })))
+
+  // --- 選択月の有効タスクIDの一覧 ---
+  const monthlyTasks = await prisma.monthlyTask.findMany({
+    where: { targetMonth: selectedMonthStr },
+  })
+  const activeTaskIds = new Set(monthlyTasks.map(mt => mt.taskId))
 
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
@@ -80,8 +84,11 @@ export default async function AdminTasksPage(props: {
         <Card className="order-2 md:order-1">
           <CardHeader>
             <CardTitle>
-              {selectedYear}年{selectedMonth}月のタスク一覧
+              {selectedYear}年のタスク一覧
             </CardTitle>
+            <CardDescription>
+              {selectedMonth}月に有効なタスクを選択してください。
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="border rounded-md overflow-x-auto">
@@ -90,27 +97,38 @@ export default async function AdminTasksPage(props: {
                   <tr>
                     <th className="p-3 font-medium">プロジェクト名</th>
                     <th className="p-3 font-medium">タスク名</th>
-                    <th className="p-3 font-medium text-right">操作</th>
+                    <th className="p-3 font-medium text-center">{selectedMonth}月の状態</th>
+                    <th className="p-3 font-medium text-right">操作 (マスター)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {tasks.map((t) => (
-                    <tr key={t.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="p-3">{t.project?.name}</td>
-                      <td className="p-3">{t.name}</td>
-                      <td className="p-3 text-right">
-                        <form action={deleteTask.bind(null, t.id)} className="inline">
-                          <Button type="submit" variant="destructive" size="sm">
-                            削除
-                          </Button>
-                        </form>
-                      </td>
-                    </tr>
-                  ))}
-                  {tasks.length === 0 && (
+                  {allTasks.map((t) => {
+                    const isActive = activeTaskIds.has(t.id)
+                    return (
+                      <tr key={t.id} className="hover:bg-muted/50 transition-colors">
+                        <td className="p-3">{t.project?.name}</td>
+                        <td className="p-3">{t.name}</td>
+                        <td className="p-3 text-center">
+                          <form action={toggleMonthlyTask.bind(null, t.id, selectedMonthStr, !isActive)} className="inline">
+                            <Button type="submit" variant={isActive ? "default" : "outline"} size="sm">
+                              {isActive ? "✓ 当月有効" : "＋ 当月に追加"}
+                            </Button>
+                          </form>
+                        </td>
+                        <td className="p-3 text-right">
+                          <form action={deleteTask.bind(null, t.id)} className="inline">
+                            <Button type="submit" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" size="sm">
+                              完全削除
+                            </Button>
+                          </form>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                  {allTasks.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="p-3 text-center text-muted-foreground">
-                        {selectedYear}年{selectedMonth}月のタスクはまだ登録されていません。
+                      <td colSpan={4} className="p-3 text-center text-muted-foreground">
+                        {selectedYear}年のタスクはまだ登録されていません。
                       </td>
                     </tr>
                   )}
@@ -128,6 +146,7 @@ export default async function AdminTasksPage(props: {
             </CardHeader>
             <CardContent>
               <form action={createProject} className="space-y-4">
+                <input type="hidden" name="year" value={selectedYear.toString()} />
                 <div className="space-y-2">
                   <Label htmlFor="projectName">プロジェクト名</Label>
                   <Input id="projectName" name="name" required />
@@ -146,7 +165,6 @@ export default async function AdminTasksPage(props: {
             </CardHeader>
             <CardContent>
               <form action={createTask} className="space-y-4">
-                <input type="hidden" name="targetMonth" value={selectedMonthStr} />
                 <div className="space-y-2">
                   <Label htmlFor="projectId">プロジェクト</Label>
                   <select 
