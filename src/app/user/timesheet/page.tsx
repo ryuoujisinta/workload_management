@@ -180,7 +180,7 @@ export default async function UserTimesheetPage(props: {
           </LinkButton>
         </div>
       ) : (
-        <TimesheetTable key={dates[0]} tasks={tasks} dates={dates} initialWorkloads={workloads} />
+        <TimesheetTable key={dates[0]} tasks={tasks} dates={dates} initialWorkloads={workloads} targetMonth={selectedMonthStr} />
       )}
     </div>
   )

@@ -10,11 +10,12 @@ type Props = {
   tasks: Task[]
   dates: string[]
   initialWorkloads: Workload[]
+  targetMonth: string
 }
 
 const DAY_NAMES = ["日", "月", "火", "水", "木", "金", "土"]
 
-export default function TimesheetTable({ tasks, dates, initialWorkloads }: Props) {
+export default function TimesheetTable({ tasks, dates, initialWorkloads, targetMonth }: Props) {
   const [isPending, startTransition] = useTransition()
   
   // State: Record<date, Record<taskId, hours>>
@@ -87,10 +88,11 @@ export default function TimesheetTable({ tasks, dates, initialWorkloads }: Props
           <tr className="bg-muted/50 border-b">
             <th className="p-3 text-left w-48 font-medium">タスク</th>
             {dates.map((date) => {
+              const isOutOfMonth = date.slice(0, 7) !== targetMonth
               const [y, m, dt] = date.split('-').map(Number)
               const dayIndex = new Date(y, m - 1, dt).getDay()
               return (
-                <th key={date} className="p-3 text-center border-l font-medium">
+                <th key={date} className={`p-3 text-center border-l font-medium ${isOutOfMonth ? "opacity-40 bg-black/5 dark:bg-white/5" : ""}`}>
                   {date.slice(5)}<br/>
                   <span className="text-xs text-muted-foreground">({DAY_NAMES[dayIndex]})</span>
                 </th>
@@ -106,17 +108,18 @@ export default function TimesheetTable({ tasks, dates, initialWorkloads }: Props
                 <br/>{task.name}
               </td>
               {dates.map(date => {
+                const isOutOfMonth = date.slice(0, 7) !== targetMonth
                 const status = getDateStatus(date)
                 const isLocked = status === "PENDING" || status === "APPROVED"
                 return (
-                  <td key={`${task.id}-${date}`} className="p-2 border-r align-top">
+                  <td key={`${task.id}-${date}`} className={`p-2 border-r align-top ${isOutOfMonth ? "bg-black/5 dark:bg-white/5" : ""}`}>
                     <Input 
                       type="number" 
                       min="0" max="24" step="0.5"
                       value={hoursGrid[date][task.id]}
                       onChange={(e) => handleHoursChange(date, task.id, e.target.value)}
-                      disabled={isLocked || isPending}
-                      className="h-8 text-center"
+                      disabled={isLocked || isPending || isOutOfMonth}
+                      className={`h-8 text-center ${isOutOfMonth ? "opacity-50" : ""}`}
                       placeholder="-"
                     />
                   </td>
@@ -128,40 +131,45 @@ export default function TimesheetTable({ tasks, dates, initialWorkloads }: Props
           <tr className="bg-muted/20">
             <td className="p-3 border-r font-bold text-right text-muted-foreground">アクション</td>
             {dates.map(date => {
+              const isOutOfMonth = date.slice(0, 7) !== targetMonth
               const status = getDateStatus(date)
               return (
-                <td key={`actions-${date}`} className="p-3 border-r align-top space-y-2">
-                  {status === "APPROVED" && (
-                    <div className="text-xs text-center font-bold text-green-600 bg-green-50 p-2 rounded">承認済</div>
-                  )}
-                  {status === "PENDING" && (
+                <td key={`actions-${date}`} className={`p-3 border-r align-top space-y-2 ${isOutOfMonth ? "bg-black/5 dark:bg-white/5" : ""}`}>
+                  {!isOutOfMonth && (
                     <>
-                      <div className="text-xs text-center font-bold text-blue-600 bg-blue-50 py-1 rounded">申請中</div>
-                      <Button 
-                        variant="outline" size="sm" className="w-full text-xs h-7" 
-                        onClick={() => handleCancelSubmit(date)}
-                        disabled={isPending}
-                      >
-                        取り消し
-                      </Button>
-                    </>
-                  )}
-                  {status === "DRAFT" && (
-                    <>
-                      <Button 
-                        variant="secondary" size="sm" className="w-full text-xs h-7" 
-                        onClick={() => handleSaveDraft(date)}
-                        disabled={isPending}
-                      >
-                        保存
-                      </Button>
-                      <Button 
-                        variant="default" size="sm" className="w-full text-xs h-7" 
-                        onClick={() => handleSubmit(date)}
-                        disabled={isPending}
-                      >
-                        申請
-                      </Button>
+                      {status === "APPROVED" && (
+                        <div className="text-xs text-center font-bold text-green-600 bg-green-50 p-2 rounded">承認済</div>
+                      )}
+                      {status === "PENDING" && (
+                        <>
+                          <div className="text-xs text-center font-bold text-blue-600 bg-blue-50 py-1 rounded">申請中</div>
+                          <Button 
+                            variant="outline" size="sm" className="w-full text-xs h-7" 
+                            onClick={() => handleCancelSubmit(date)}
+                            disabled={isPending}
+                          >
+                            取り消し
+                          </Button>
+                        </>
+                      )}
+                      {status === "DRAFT" && (
+                        <>
+                          <Button 
+                            variant="secondary" size="sm" className="w-full text-xs h-7" 
+                            onClick={() => handleSaveDraft(date)}
+                            disabled={isPending}
+                          >
+                            保存
+                          </Button>
+                          <Button 
+                            variant="default" size="sm" className="w-full text-xs h-7" 
+                            onClick={() => handleSubmit(date)}
+                            disabled={isPending}
+                          >
+                            申請
+                          </Button>
+                        </>
+                      )}
                     </>
                   )}
                 </td>
