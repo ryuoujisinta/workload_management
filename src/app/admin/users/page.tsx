@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createUser, deleteUser } from "@/actions/admin-users"
 import Link from "next/link"
+import { DeleteButton } from "@/components/delete-button"
 
 export default async function AdminUsersPage() {
   const session = await auth()
@@ -54,9 +55,14 @@ export default async function AdminUsersPage() {
                           <Button type="button" variant="outline" size="sm">工数確認</Button>
                         </Link>
                         {session.user.id !== u.id && (
-                          <form action={deleteUser.bind(null, u.id)} className="inline">
-                            <Button type="submit" variant="destructive" size="sm">削除</Button>
-                          </form>
+                          <DeleteButton
+                            formAction={deleteUser.bind(null, u.id)}
+                            variant="destructive"
+                            size="sm"
+                            confirmMessage={`本当にこのユーザー「${u.name}」を削除しますか？\nこの操作は取り消せません。ユーザーに関連するすべての工数データも削除されます。`}
+                          >
+                            削除
+                          </DeleteButton>
                         )}
                       </td>
                     </tr>
