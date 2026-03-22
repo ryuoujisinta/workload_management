@@ -9,6 +9,8 @@ const userAuthFile = path.join(__dirname, 'e2e/.auth/user.json')
 
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: require.resolve('./e2e/global-setup'),
+  globalTeardown: require.resolve('./e2e/global-teardown'),
   timeout: 30 * 1000,
   expect: { timeout: 5000 },
   fullyParallel: false,
