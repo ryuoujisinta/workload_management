@@ -1,7 +1,6 @@
 import { Fragment } from "react"
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { getProjectStats } from "@/actions/admin-stats"
@@ -18,17 +17,14 @@ export default async function ProjectStatsPage(props: {
   const searchParams = await props.searchParams
   const now = new Date()
   const currentYear = now.getFullYear()
-  
+
   const selectedYear = searchParams?.year ? parseInt(searchParams.year, 10) : currentYear
   const selectedProjectId = searchParams?.projectId || undefined
-  const selectedTab = (searchParams as any)?.tab || "user"
+  const selectedTab = (searchParams as any)?.tab || "task"
 
   // データ取得
   const stats = await getProjectStats(selectedYear, selectedProjectId)
-  
-  // 年度選択肢 (前後5年分)
-  const years = Array.from({ length: 11 }).map((_, i) => currentYear - 5 + i)
-  
+
   const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 
   const getTabUrl = (tab: string) => {
@@ -59,7 +55,7 @@ export default async function ProjectStatsPage(props: {
             <div className="space-y-2">
               <Label>集計年度</Label>
               <div className="flex items-center gap-2">
-                <LinkButton 
+                <LinkButton
                   href={`?year=${selectedYear - 1}${selectedProjectId ? `&projectId=${selectedProjectId}` : ""}${selectedTab !== 'user' ? `&tab=${selectedTab}` : ""}`}
                   variant="outline"
                   size="sm"
@@ -69,7 +65,7 @@ export default async function ProjectStatsPage(props: {
                 <div className="px-4 py-1.5 bg-muted rounded-md font-bold text-sm">
                   {selectedYear}年度
                 </div>
-                <LinkButton 
+                <LinkButton
                   href={`?year=${selectedYear + 1}${selectedProjectId ? `&projectId=${selectedProjectId}` : ""}${selectedTab !== 'user' ? `&tab=${selectedTab}` : ""}`}
                   variant="outline"
                   size="sm"
@@ -85,9 +81,9 @@ export default async function ProjectStatsPage(props: {
             <input type="hidden" name="tab" value={selectedTab} />
             <div className="space-y-2 flex-1 md:w-64">
               <Label htmlFor="projectId">プロジェクト</Label>
-              <select 
-                id="projectId" 
-                name="projectId" 
+              <select
+                id="projectId"
+                name="projectId"
                 defaultValue={selectedProjectId || ""}
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
@@ -97,7 +93,7 @@ export default async function ProjectStatsPage(props: {
                 ))}
               </select>
             </div>
-            
+
             <button type="submit" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2">
               選択
             </button>
@@ -106,22 +102,22 @@ export default async function ProjectStatsPage(props: {
       </Card>
 
       <div className="flex border-b">
-        <LinkButton 
-          href={getTabUrl("user")} 
-          variant={selectedTab === "user" ? "default" : "ghost"}
-          className={`rounded-b-none ${selectedTab === "user" ? "" : "border-transparent"}`}
-        >
-          ユーザー別
-        </LinkButton>
-        <LinkButton 
-          href={getTabUrl("task")} 
+        <LinkButton
+          href={getTabUrl("task")}
           variant={selectedTab === "task" ? "default" : "ghost"}
           className={`rounded-b-none ${selectedTab === "task" ? "" : "border-transparent"}`}
         >
           タスク別
         </LinkButton>
-        <LinkButton 
-          href={getTabUrl("taskUser")} 
+        <LinkButton
+          href={getTabUrl("user")}
+          variant={selectedTab === "user" ? "default" : "ghost"}
+          className={`rounded-b-none ${selectedTab === "user" ? "" : "border-transparent"}`}
+        >
+          ユーザー別
+        </LinkButton>
+        <LinkButton
+          href={getTabUrl("taskUser")}
           variant={selectedTab === "taskUser" ? "default" : "ghost"}
           className={`rounded-b-none ${selectedTab === "taskUser" ? "" : "border-transparent"}`}
         >
