@@ -10,3 +10,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 Before committing, you MUST ALWAYS check the modification details using `git diff` and `git status` to verify that the changes match your intentions.
 Additionally, you MUST NOT perform file modifications and `git commit` in the same step. You must first apply the modifications, verify them using `git status` and `git diff`, and then perform the `git commit` in a separate subsequent step.
 <!-- END:git-commit-rules -->
+
+<!-- BEGIN:shell-rules -->
+# Shell rules
+
+Windows環境では、コマンドは基本的に `cmd /c` を介して実行してください。
+<!-- END:shell-rules -->
