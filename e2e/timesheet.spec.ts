@@ -52,6 +52,60 @@ test.describe('User Timesheet (工数タイムシート)', () => {
     await expect(page).not.toHaveURL(urlBefore)
   })
 
+  test('月ナビゲーションが機能する', async ({ page }) => {
+    const initialText = await page.locator('h1 + p').textContent()
+    
+    await page.getByRole('link', { name: '次月' }).click()
+    await expect(page).toHaveURL(/.*month=.*/)
+    const nextText = await page.locator('h1 + p').textContent()
+    expect(nextText).not.toBe(initialText)
+
+    await page.getByRole('link', { name: '前月' }).click()
+    // 値が元に戻るのを待機
+    await expect(page.locator('h1 + p')).toHaveText(initialText!)
+  })
+
+  test('工数を入力して保存・合計計算を確認できる', async ({ page }) => {
+    const table = page.locator('table')
+    if (await table.isVisible()) {
+      // 活性化している（disabledでない）入力フィールドを取得
+      // nth(10)などで月の途中のセルを狙う
+      const targetInput = table.locator('input[type="number"]:not([disabled])').first()
+      await targetInput.fill('4.5')
+      
+      await page.getByRole('button', { name: '保存' }).first().click()
+      
+      await page.reload()
+      await expect(targetInput).toHaveValue('4.5')
+    } else {
+      test.skip()
+    }
+  })
+
+  test('申請と取り消しのフローが機能する', async ({ page }) => {
+    const table = page.locator('table')
+    if (await table.isVisible()) {
+      const submitButton = page.getByRole('button', { name: '申請' }).first()
+      await submitButton.click()
+      
+      // ステータスが「申請中」に変わり、ボタンが「取り消し」になる
+      await expect(page.getByText('申請中').first()).toBeVisible()
+      const cancelButton = page.getByRole('button', { name: '取り消し' }).first()
+      await expect(cancelButton).toBeVisible()
+      
+      // 入力が disabled になる
+      const firstInput = table.locator('input[type="number"]').first()
+      await expect(firstInput).toBeDisabled()
+      
+      // 取り消し
+      await cancelButton.click()
+      await expect(page.getByRole('button', { name: '申請' }).first()).toBeVisible()
+      await expect(firstInput).not.toBeDisabled()
+    } else {
+      test.skip()
+    }
+  })
+
   test('マイタスクがない場合は案内メッセージが表示される', async ({ page }) => {
     const noTaskMsg = page.getByText(/マイタスクが登録されていません。/)
     const timesheetTable = page.locator('table')

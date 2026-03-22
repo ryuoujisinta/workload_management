@@ -24,4 +24,29 @@ test.describe('Admin Approvals (工数承認)', () => {
     
     expect(hasPendingEmpty || hasPendingData).toBe(true)
   })
+
+  test('申請を承認・却下できる', async ({ page }) => {
+    // 承認待ちボタンを探す
+    const approveButton = page.getByRole('button', { name: '承認' }).first()
+    
+    if (await approveButton.isVisible()) {
+      // 1. 承認実行
+      await approveButton.click()
+      // 承認済み一覧（承認取り消しボタンがある行）に出現したことを確認
+      const revokeButton = page.getByRole('button', { name: '承認取り消し' }).first()
+      await expect(revokeButton).toBeVisible()
+
+      // 2. 取り消し実行
+      await revokeButton.click()
+      await expect(approveButton).toBeVisible()
+
+      // 3. 却下実行
+      const rejectButton = page.getByRole('button', { name: '却下' }).first()
+      await rejectButton.click()
+      // 却下後は項目が消えることを待機
+      await expect(rejectButton).not.toBeVisible()
+    } else {
+      test.skip()
+    }
+  })
 })
