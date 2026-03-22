@@ -132,7 +132,7 @@ export default async function AdminUserTimesheetPage({
                     return (
                     <tr key={d.day} className={`transition-colors ${isApproved ? "bg-green-100/80 hover:bg-green-200/60 dark:bg-green-900/30 dark:hover:bg-green-900/40" : "hover:bg-muted/50"}`}>
                       <td className={`p-3 border-r sticky left-0 z-10 font-medium ${isApproved ? "bg-green-200/80 dark:bg-green-800/50" : "bg-background/95"}`}>
-                        {monthNum}/{d.day}
+                        {monthNum}/{d.day}({new Date(year, monthNum - 1, d.day).toLocaleDateString('ja-JP', { weekday: 'short' })})
                       </td>
                       {data.tasks.map(t => {
                         const hours = hoursMap[t.id]?.[d.dateStr] || 0

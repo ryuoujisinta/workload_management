@@ -69,7 +69,12 @@ export default async function AdminApprovalsPage() {
                     {pendingList.map((g, idx) => (
                       <tr key={idx} className="hover:bg-muted/50">
                         <td className="p-3">{g.userName}</td>
-                        <td className="p-3">{g.dateStr}</td>
+                        <td className="p-3">
+                          {(() => {
+                            const [y, m, d] = g.dateStr.split("-").map(Number);
+                            return `${g.dateStr}(${new Date(y, m - 1, d).toLocaleDateString("ja-JP", { weekday: "short" })})`;
+                          })()}
+                        </td>
                         <td className="p-3">{g.totalHours} h</td>
                         <td className="p-3 text-xs text-muted-foreground">
                           {g.details.map((d: string, i: number) => <div key={i}>{d}</div>)}
@@ -115,7 +120,12 @@ export default async function AdminApprovalsPage() {
                     {approvedList.map((g, idx) => (
                       <tr key={idx} className="hover:bg-muted/50">
                         <td className="p-3">{g.userName}</td>
-                        <td className="p-3">{g.dateStr}</td>
+                        <td className="p-3">
+                          {(() => {
+                            const [y, m, d] = g.dateStr.split("-").map(Number);
+                            return `${g.dateStr}(${new Date(y, m - 1, d).toLocaleDateString("ja-JP", { weekday: "short" })})`;
+                          })()}
+                        </td>
                         <td className="p-3">{g.totalHours} h</td>
                         <td className="p-3 text-xs text-muted-foreground">
                           {g.details.map((d: string, i: number) => <div key={i}>{d}</div>)}
