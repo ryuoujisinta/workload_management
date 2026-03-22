@@ -1,9 +1,62 @@
 import { test, expect } from '@playwright/test'
+import path from 'path'
+
+const adminAuthFile = path.resolve(__dirname, '.auth/admin.json')
 
 // このスペックは 'user' プロジェクトで実行される
 test.describe('User Tasks (マイタスク選択)', () => {
+  let projectName: string
+  let taskName: string
+
+  test.beforeAll(async ({ browser }) => {
+    projectName = `E2E_UserTaskProject_${Date.now()}`
+    taskName = `E2E_UserTask_${Date.now()}`
+
+    // 1. adminでログイン
+    const adminContext = await browser.newContext({ storageState: adminAuthFile })
+    const adminPage = await adminContext.newPage()
+
+    // 2. プロジェクト作成
+    await adminPage.goto('/admin/tasks')
+    const projectForm = adminPage.locator('form').filter({ hasText: 'プロジェクト名' })
+    await projectForm.getByLabel('プロジェクト名').fill(projectName)
+    await projectForm.getByRole('button', { name: '登録する' }).click()
+    await expect(adminPage.getByText(projectName).first()).toBeVisible()
+
+    // 3. 作成したプロジェクトにタスク登録
+    const taskForm = adminPage.locator('form').filter({ has: adminPage.getByLabel('タスク名') })
+    await taskForm.getByLabel('プロジェクト', { exact: true }).selectOption({ label: projectName })
+    await taskForm.getByLabel('タスク名').fill(taskName)
+    await taskForm.getByRole('button', { name: '登録する' }).click()
+    await expect(adminPage.getByRole('cell', { name: taskName })).toBeVisible()
+
+    // 4. タスクの有効化
+    const addButton = adminPage.getByRole('button', { name: '＋ 当月に追加' }).last()
+    await addButton.click()
+    await expect(adminPage.getByRole('button', { name: '✓ 当月有効' }).last()).toBeVisible()
+
+    await adminContext.close()
+  })
+
   test.beforeEach(async ({ page }) => {
     await page.goto('/user/tasks')
+  })
+
+  test.afterAll(async ({ browser }) => {
+    // 5. 作成したプロジェクトの削除
+    const adminContext = await browser.newContext({ storageState: adminAuthFile })
+    const adminPage = await adminContext.newPage()
+    await adminPage.goto('/admin/tasks')
+
+    adminPage.on('dialog', dialog => dialog.accept())
+    const projectRow = adminPage.locator('div').filter({ hasText: projectName }).filter({ has: adminPage.getByRole('button', { name: '削除' }) }).last()
+    
+    if (await projectRow.isVisible()) {
+      await projectRow.getByRole('button', { name: '削除' }).click()
+      await expect(adminPage.getByText(projectName)).toHaveCount(0)
+    }
+
+    await adminContext.close()
   })
 
   test('マイタスク登録ページが表示される', async ({ page }) => {
