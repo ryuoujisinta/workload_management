@@ -6,6 +6,115 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  passwordHash  String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  userTasks     UserTask[]
+  workloads     Workload[]
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  year      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tasks     Task[]
+}
+
+model Task {
+  id           String        @id @default(cuid())
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  projectId    String
+  monthlyTasks MonthlyTask[]
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userTasks    UserTask[]
+  workloads    Workload[]
+}
+
+model MonthlyTask {
+  id          String   @id @default(cuid())
+  taskId      String
+  targetMonth String
+  createdAt   DateTime @default(now())
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, targetMonth])
+}
+
+model UserTask {
+  id        String   @id @default(cuid())
+  userId    String
+  taskId    String
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId])
+}
+
+model Workload {
+  id        String         @id @default(cuid())
+  userId    String
+  taskId    String
+  date      DateTime
+  hours     Float          @default(0)
+  status    WorkloadStatus @default(DRAFT)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  task      Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId, date])
+}
+
 enum Role {
   ADMIN
   USER
@@ -16,81 +125,4 @@ enum WorkloadStatus {
   PENDING
   APPROVED
   REJECTED
-}
-
-model User {
-  id           String    @id @default(cuid())
-  name         String
-  email        String    @unique
-  passwordHash String
-  role         Role      @default(USER)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  userTasks    UserTask[]
-  workloads    Workload[]
-}
-
-model Project {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  year        Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  tasks       Task[]
-}
-
-model Task {
-  id          String   @id @default(cuid())
-  projectId   String
-  name        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  monthlyTasks MonthlyTask[]
-  userTasks   UserTask[]
-  workloads   Workload[]
-}
-
-// 管理者が設定した「該当月に有効なタスク」
-model MonthlyTask {
-  id          String   @id @default(cuid())
-  taskId      String
-  targetMonth String   // e.g. "2026-03"
-  createdAt   DateTime @default(now())
-
-  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-
-  @@unique([taskId, targetMonth])
-}
-
-// ユーザーが選択した「マイタスク」
-model UserTask {
-  id        String   @id @default(cuid())
-  userId    String
-  taskId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-
-  @@unique([userId, taskId])
-}
-
-// 1日・1タスクごとの工数データ
-model Workload {
-  id        String         @id @default(cuid())
-  userId    String
-  taskId    String
-  date      DateTime       // Date only mappings (00:00 UTC)
-  hours     Float          @default(0)
-  status    WorkloadStatus @default(DRAFT)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
-
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task      Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, taskId, date])
 }

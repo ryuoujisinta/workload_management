@@ -34,3 +34,41 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+## 認証とシングルサインオン (SSO) の設定
+
+本プロジェクトは **Auth.js (NextAuth.js v5)** を使用しており、GoogleアカウントによるSSOをサポートしています。
+
+### 1. 環境変数の設定
+`.env` ファイルに以下の項目を設定してください。
+
+```env
+# セッション暗号化用 (npx auth secret で生成可能)
+AUTH_SECRET=your-auth-secret
+
+# Google SSO 設定 (Google Cloud Consoleにて取得)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+### 2. データベースのセットアップ
+SSO用のテーブルを作成するためにマイグレーションを実行してください。
+
+```bash
+npx prisma migrate dev
+```
+
+### 3. Google Cloud Console での設定
+1.  [Google Cloud Console](https://console.cloud.google.com/) でプロジェクトを作成します。
+2.  「APIとサービス」 > 「認証情報」から **OAuth 2.0 クライアント ID** を作成します。
+3.  **承認済みのリダイレクト URI** に以下を追加します：
+    - `http://localhost:3000/api/auth/callback/google`
+
+### 4. ユーザーの利用許可（ホワイトリスト）
+本システムはセキュリティのため、**管理者が事前に登録したユーザーのみ**がSSOでログインできるようになっています。
+
+1.  管理者アカウントでログインします。
+2.  「ユーザー管理」画面にて、新規ユーザーをその人の **Googleメールアドレス** で登録します。
+3.  登録されたユーザーは、ログイン画面の「Googleでログイン」ボタンからシステムを利用できるようになります。
