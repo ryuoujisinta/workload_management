@@ -50,7 +50,7 @@ test.describe('User Tasks (マイタスク選択)', () => {
 
     adminPage.on('dialog', dialog => dialog.accept())
     const projectRow = adminPage.locator('div').filter({ hasText: projectName }).filter({ has: adminPage.getByRole('button', { name: '削除' }) }).last()
-    
+
     if (await projectRow.isVisible()) {
       await projectRow.getByRole('button', { name: '削除' }).click()
       await expect(adminPage.getByText(projectName)).toHaveCount(0)
@@ -77,21 +77,17 @@ test.describe('User Tasks (マイタスク選択)', () => {
   test('タスクがある場合「マイタスクに追加」ボタンを押すと表示が変わる', async ({ page }) => {
     const taskCard = page.locator('[data-slot="card"]').first()
     const addButton = page.getByRole('button', { name: 'マイタスクに追加' }).first()
-    
+
     // addButton が存在する場合のみテストを実行
-    if (await addButton.isVisible()) {
-      await addButton.click()
-      // ページがリロードされ、ボタンが「マイタスクから解除」に変わる
-      await expect(page.getByRole('button', { name: 'マイタスクから解除' }).first()).toBeVisible()
-    } else {
-      // タスクが存在しない場合はスキップ扱い（passとする）
-      test.skip()
-    }
+    await addButton.isVisible()
+    await addButton.click()
+    // ページがリロードされ、ボタンが「マイタスクから解除」に変わる
+    await expect(page.getByRole('button', { name: 'マイタスクから解除' }).first()).toBeVisible()
   })
 
   test('月ナビゲーションが機能する', async ({ page }) => {
     const initialText = await page.locator('h1 + p').textContent()
-    
+
     // 次月へ
     await page.getByRole('link', { name: '次月' }).click()
     await expect(page).toHaveURL(/.*month=.*/)
@@ -104,15 +100,11 @@ test.describe('User Tasks (マイタスク選択)', () => {
   })
 
   test('マイタスクの解除が機能する', async ({ page }) => {
-    const taskCard = page.locator('[data-slot="card"]').first()
     const removeButton = page.getByRole('button', { name: 'マイタスクから解除' }).first()
-    
-    if (await removeButton.isVisible()) {
-      await removeButton.click()
-      await expect(page.getByRole('button', { name: 'マイタスクに追加' }).first()).toBeVisible()
-    } else {
-      test.skip()
-    }
+
+    await removeButton.isVisible()
+    await removeButton.click()
+    await expect(page.getByRole('button', { name: 'マイタスクに追加' }).first()).toBeVisible()
   })
 
   test('マイタスクの追加・解除がタイムシート画面に反映される', async ({ page }) => {
@@ -129,7 +121,7 @@ test.describe('User Tasks (マイタスク選択)', () => {
     const initialCard = page.locator('[data-slot="card"]').filter({ has: page.getByRole('button', { name: 'マイタスクに追加' }) }).first()
     const taskName = await initialCard.locator('[data-slot="card-title"]').textContent()
     await initialCard.getByRole('button', { name: 'マイタスクに追加' }).click()
-    
+
     // 追加後は「マイタスクから解除」ボタンが表示されることを確認
     // 再取得時にフィルタリング条件（ボタンの種類）に依存しないようにする
     const taskCard = page.locator('[data-slot="card"]').filter({ hasText: taskName! }).first()
