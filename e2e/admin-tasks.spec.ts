@@ -53,7 +53,6 @@ test.describe('Admin Task Management (タスク管理)', () => {
     ])
 
     // 2. 登録されたことを確認
-    await page.reload()
     await expect(page.getByText(projectName).first()).toBeVisible()
 
     // 3. 削除ボタンをクリック
@@ -62,10 +61,16 @@ test.describe('Admin Task Management (タスク管理)', () => {
     
     // プロジェクト行を特定して削除ボタンをクリック
     const projectRow = page.locator('div').filter({ hasText: projectName }).filter({ has: page.getByRole('button', { name: '削除' }) }).last()
-    await projectRow.getByRole('button', { name: '削除' }).click()
+    
+    await Promise.all([
+      // サーバーアクションによる削除処理の完了を待機
+      page.waitForResponse(res => res.request().method() === 'POST' && res.status() === 200),
+      projectRow.getByRole('button', { name: '削除' }).click()
+    ])
 
     // 4. 一覧から消えたことを確認
-    await page.reload()
-    await expect(page.getByText(projectName)).not.toBeVisible()
+    // Next.js の Server Action は自動的に再検証を行うため、reload なしで消えるはず
+    // もし安定しない場合は reload しても良いが、POST の完了をしっかり待つ
+    await expect(page.getByText(projectName)).toHaveCount(0)
   })
 })
