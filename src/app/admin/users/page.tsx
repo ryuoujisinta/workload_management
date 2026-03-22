@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { createUser, deleteUser } from "@/actions/admin-users"
 import Link from "next/link"
 import { DeleteButton } from "@/components/delete-button"
+import { UserRegistrationForm } from "@/components/user-registration-form"
 
 export default async function AdminUsersPage() {
   const session = await auth()
@@ -83,27 +84,7 @@ export default async function AdminUsersPage() {
             <CardTitle>新規ユーザー登録</CardTitle>
           </CardHeader>
           <CardContent>
-            <form action={createUser} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">氏名</Label>
-                <Input id="name" name="name" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">メールアドレス</Label>
-                <Input id="email" name="email" type="email" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">権限</Label>
-                <select id="role" name="role" className="w-full border rounded-md px-3 h-10 text-sm bg-background cursor-pointer" required>
-                  <option value="USER">一般ユーザー</option>
-                  <option value="ADMIN">管理者</option>
-                </select>
-              </div>
-              <div className="pt-2">
-                <Button type="submit" className="w-full">登録する</Button>
-                <p className="text-xs text-muted-foreground text-center mt-2">※パスワードは一律 password123 で発行されます</p>
-              </div>
-            </form>
+            <UserRegistrationForm />
           </CardContent>
         </Card>
       </div>
