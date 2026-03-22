@@ -2,36 +2,18 @@ import { test, expect } from '@playwright/test'
 
 // このスペックは 'admin' プロジェクトで実行される
 test.describe('Admin Approvals (工数承認)', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/admin/approvals')
-  })
+  let monthStr = '2026-03'
+  let projectName: string
+  let taskName: string
 
-  test('工数承認ページが表示される', async ({ page }) => {
-    await expect(page.getByRole('heading', { name: '工数承認ダッシュボード' })).toBeVisible()
-    await expect(page.getByText('承認待ち一覧 (Pending)')).toBeVisible()
-    await expect(page.getByText('承認済み一覧 (Approved)')).toBeVisible()
-  })
+  test.beforeAll(async ({ browser }) => {
+    projectName = `PRJ_APPROVAL_${Date.now()}`
+    taskName = `TSK_APPROVAL_${Date.now()}`
+    const context = await browser.newContext({ storageState: 'e2e/.auth/admin.json' })
+    const page = await context.newPage()
 
-  test('承認待ちがない場合は「申請はありません」が表示される', async ({ page }) => {
-    // データが存在しない場合（または承認済みの場合）の空表示を確認
-    // このテストはDBの状態に依存するため、表示パターンのいずれかが正しく出ることを確認する
-    const pendingSection = page.getByText('承認待ちの申請はありません。')
-    const pendingTable = page.getByText('承認').first()
-
-    // 空表示か承認ボタンのどちらかが存在する（状態次第）
-    const hasPendingEmpty = await pendingSection.isVisible().catch(() => false)
-    const hasPendingData = await pendingTable.isVisible().catch(() => false)
-
-    expect(hasPendingEmpty || hasPendingData).toBe(true)
-  })
-
-  test('申請を承認・却下できる', async ({ page }) => {
     // 1. プロジェクト登録
-    const monthStr = '2026-03'
     await page.goto(`/admin/tasks?month=${monthStr}`)
-    const projectName = `PRJ_APPROVAL_${Date.now()}`
-    const taskName = `TSK_APPROVAL_${Date.now()}`
-
     const projectForm = page.locator('form').filter({ hasText: 'プロジェクト名' })
     await projectForm.getByLabel('プロジェクト名').fill(projectName)
     await projectForm.getByRole('button', { name: '登録する' }).click()
@@ -75,10 +57,46 @@ test.describe('Admin Approvals (工数承認)', () => {
       // 申請中になるのを待機
       await expect(page.getByText('申請中').nth(i)).toBeVisible()
     }
+    await context.close()
+  })
 
-    // 本来のテスト対象（承認ページ）へ戻る
+  test.afterAll(async ({ browser }) => {
+    const context = await browser.newContext({ storageState: 'e2e/.auth/admin.json' })
+    const page = await context.newPage()
+
+    // 作成したデータの削除
+    await page.goto(`/admin/tasks?month=${monthStr}`)
+    page.on('dialog', dialog => dialog.accept())
+    const projectRow = page.locator('div').filter({ hasText: projectName }).filter({ has: page.getByRole('button', { name: '削除' }) }).last()
+    await projectRow.getByRole('button', { name: '削除' }).click()
+    await expect(projectRow).not.toBeVisible()
+    await context.close()
+  })
+
+  test.beforeEach(async ({ page }) => {
     await page.goto('/admin/approvals')
+  })
 
+  test('工数承認ページが表示される', async ({ page }) => {
+    await expect(page.getByRole('heading', { name: '工数承認ダッシュボード' })).toBeVisible()
+    await expect(page.getByText('承認待ち一覧 (Pending)')).toBeVisible()
+    await expect(page.getByText('承認済み一覧 (Approved)')).toBeVisible()
+  })
+
+  test('承認待ちがない場合は「申請はありません」が表示される', async ({ page }) => {
+    // データが存在しない場合（または承認済みの場合）の空表示を確認
+    // このテストはDBの状態に依存するため、表示パターンのいずれかが正しく出ることを確認する
+    const pendingSection = page.getByText('承認待ちの申請はありません。')
+    const pendingTable = page.getByText('承認').first()
+
+    // 空表示か承認ボタンのどちらかが存在する（状態次第）
+    const hasPendingEmpty = await pendingSection.isVisible().catch(() => false)
+    const hasPendingData = await pendingTable.isVisible().catch(() => false)
+
+    expect(hasPendingEmpty || hasPendingData).toBe(true)
+  })
+
+  test('申請を承認・却下できる', async ({ page }) => {
     // 承認待ちボタンを探す
     const pendingTable = page.locator('table').first()
     const approveButton = pendingTable.getByRole('button', { name: '承認' }).first()
@@ -113,12 +131,6 @@ test.describe('Admin Approvals (工数承認)', () => {
     await rejectButton.click()
     // 却下後はその行も消えることを確認
     await expect(page.getByRole('row').filter({ hasText: projectName }).filter({ hasText: remainingDateText })).not.toBeVisible()
-
-    // 作成したデータの削除
-    await page.goto(`/admin/tasks?month=${monthStr}`)
-    page.on('dialog', dialog => dialog.accept())
-    const projectRow = page.locator('div').filter({ hasText: projectName }).filter({ has: page.getByRole('button', { name: '削除' }) }).last()
-    await projectRow.getByRole('button', { name: '削除' }).click()
-    await expect(projectRow).not.toBeVisible()
   })
+
 })
