@@ -65,6 +65,9 @@ export default async function UserTimesheetPage(props: {
     startOfWeek.setHours(0, 0, 0, 0)
   }
 
+  const nextMonday = new Date(startOfWeek)
+  nextMonday.setDate(startOfWeek.getDate() + 7)
+
   const endOfWeek = new Date(startOfWeek)
   endOfWeek.setDate(startOfWeek.getDate() + 6)
 
@@ -115,7 +118,7 @@ export default async function UserTimesheetPage(props: {
       userId,
       date: {
         gte: startOfWeek,
-        lte: endOfWeek,
+        lt: nextMonday,
       },
     },
   })
