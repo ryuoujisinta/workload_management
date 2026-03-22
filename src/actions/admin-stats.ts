@@ -14,6 +14,14 @@ export type UserStats = {
   total: number
 }
 
+export type TaskStats = {
+  id: string
+  name: string
+  projectName: string
+  months: MonthlyStats
+  total: number
+}
+
 export type TaskUserStats = {
   taskId: string
   taskName: string
@@ -53,7 +61,7 @@ export async function getProjectStats(year: number, projectId?: string): Promise
   })
 
   if (projects.length === 0) {
-    return { users: [], monthTotals: {}, grandTotal: 0, projects: [] }
+    return { users: [], tasks: [], taskUserStats: [], monthTotals: {}, grandTotal: 0, projects: [] }
   }
 
   const projectIds = projectId ? [projectId] : projects.map(p => p.id)
