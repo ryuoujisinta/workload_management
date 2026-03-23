@@ -120,3 +120,10 @@ npx playwright test
 # Prisma Studio の起動 (DBの中身を確認)
 npx prisma studio
 ```
+
+---
+
+## ライセンス
+
+このプロジェクトは [MIT ライセンス](LICENSE) のもとで公開されています。
+Copyright (c) 2026 ryuoujisinta
