@@ -15,9 +15,9 @@ async function globalTeardown() {
     // psqlを使用してリストアを実行
     // WindowsのPowerShell経由では < リダイレクトが不安定な場合があるため、直接ファイルを渡すかcatを使用
     const backupContent = fs.readFileSync(backupPath)
-    execSync(`wsl docker exec -i workload-postgres psql -U postgres workload_db`, {
+    execSync(`wsl docker exec -i workload-postgres psql -U postgres workload_db -q`, {
       input: backupContent,
-      stdio: ['pipe', 'inherit', 'inherit']
+      stdio: ['pipe', 'ignore', 'inherit']
     })
     console.log('Database restored successfully.')
     
