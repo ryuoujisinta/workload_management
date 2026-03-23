@@ -114,6 +114,10 @@ export default async function UserTimesheetPage(props: {
         },
       },
     },
+    orderBy: [
+      { task: { project: { name: "asc" } } },
+      { task: { name: "asc" } },
+    ],
   })
 
   const workloads = await prisma.workload.findMany({

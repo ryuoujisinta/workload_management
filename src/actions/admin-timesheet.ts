@@ -85,9 +85,16 @@ export async function getMonthlyUserTimesheet(userId: string, targetMonth: strin
     }
   })
 
+  const tasks = Array.from(taskMap.values()).sort((a, b) => {
+    if (a.projectName !== b.projectName) {
+      return a.projectName.localeCompare(b.projectName)
+    }
+    return a.name.localeCompare(b.name)
+  })
+
   return {
     user,
-    tasks: Array.from(taskMap.values()),
+    tasks,
     workloads: workloads.map(w => ({
       id: w.id,
       taskId: w.taskId,
