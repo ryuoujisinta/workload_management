@@ -10,6 +10,9 @@ import { createTask, deleteTask, toggleMonthlyTask } from "@/actions/admin-tasks
 import { createProject, deleteProject } from "@/actions/admin-projects"
 import { DeleteButton } from "@/components/delete-button"
 
+import { ImportCSVButton } from "@/components/import-csv-button"
+import { importData } from "@/actions/admin-import"
+
 export default async function AdminTasksPage(props: {
   searchParams?: Promise<{ month?: string }>
 }) {
@@ -144,6 +147,19 @@ export default async function AdminTasksPage(props: {
         </Card>
 
         <div className="order-1 md:order-2 space-y-6 flex flex-col">
+          {/* CSVインポート */}
+          <Card className="h-fit">
+            <CardHeader>
+              <CardTitle>一括登録 (CSV)</CardTitle>
+              <CardDescription>
+                year, projectName, taskName<br />の形式でインポートします。
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ImportCSVButton action={importData} />
+            </CardContent>
+          </Card>
+
           {/* 新規プロジェクト登録フォーム */}
           <Card className="h-fit">
             <CardHeader>
