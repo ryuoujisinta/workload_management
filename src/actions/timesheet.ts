@@ -15,28 +15,37 @@ export async function saveWorkload(entries: WorkloadEntry[]) {
   if (!session?.user?.id) throw new Error("Unauthorized")
   const userId = session.user.id
 
-  for (const entry of entries) {
-    const dateObj = new Date(entry.date)
-    await prisma.workload.upsert({
-      where: {
-        userId_taskId_date: {
+  if (entries.length === 0) return
+
+  await prisma.$transaction(
+    entries.map((entry) => {
+      // Ensure date is treated as midnight UTC for consistency
+      const dateObj = new Date(entry.date)
+      if (isNaN(dateObj.getTime())) {
+        throw new Error(`Invalid date: ${entry.date}`)
+      }
+
+      return prisma.workload.upsert({
+        where: {
+          userId_taskId_date: {
+            userId,
+            taskId: entry.taskId,
+            date: dateObj
+          }
+        },
+        update: {
+          hours: entry.hours,
+        },
+        create: {
           userId,
           taskId: entry.taskId,
-          date: dateObj
+          date: dateObj,
+          hours: entry.hours,
+          status: "DRAFT"
         }
-      },
-      update: {
-        hours: entry.hours,
-      },
-      create: {
-        userId,
-        taskId: entry.taskId,
-        date: dateObj,
-        hours: entry.hours,
-        status: "DRAFT"
-      }
+      })
     })
-  }
+  )
 
   revalidatePath("/user/timesheet")
 }
