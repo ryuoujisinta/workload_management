@@ -13,7 +13,7 @@ test.describe('Login Flow', () => {
     await page.getByLabel('パスワード').fill('password123')
 
     // 4. ログインボタンをクリック
-    await page.getByRole('button', { name: 'ログイン' }).click()
+    await page.getByRole('button', { name: 'ログイン', exact: true }).click()
 
     // 5. リダイレクトされてトップページに遷移することを確認
     await expect(page).toHaveURL('/')
@@ -30,7 +30,7 @@ test.describe('Login Flow', () => {
     
     await page.getByLabel('メールアドレス').fill('invalid@example.com')
     await page.getByLabel('パスワード').fill('wrongpassword')
-    await page.getByRole('button', { name: 'ログイン' }).click()
+    await page.getByRole('button', { name: 'ログイン', exact: true }).click()
 
     // エラーメッセージが表示されることを確認
     await expect(page.getByText('メールアドレスまたはパスワードが間違っています')).toBeVisible()

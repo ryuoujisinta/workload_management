@@ -22,7 +22,7 @@ test.describe('Access Control (アクセス制御)', () => {
     await page.goto('/login')
     await page.getByLabel('メールアドレス').fill('user@example.com')
     await page.getByLabel('パスワード').fill('password123')
-    await page.getByRole('button', { name: 'ログイン' }).click()
+    await page.getByRole('button', { name: 'ログイン', exact: true }).click()
     await page.waitForURL('/')
 
     // 管理者ページへの不正アクセスを試みる
