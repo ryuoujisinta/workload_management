@@ -4,6 +4,12 @@ import Google from "next-auth/providers/google"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
+import { ProxyAgent, setGlobalDispatcher } from "undici"
+
+if (process.env.HTTP_PROXY) {
+  const dispatcher = new ProxyAgent(process.env.HTTP_PROXY)
+  setGlobalDispatcher(dispatcher)
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -15,7 +21,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
-// ... (omitted for brevity in replace_file_content, but I'll make sure the target content is correct)
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -45,17 +50,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // 10人未満の小規模運用のためのホワイトリストチェック（DB参照）
       if (account?.provider === "google") {
         if (!user.email) return false
 
-        // 管理者が事前に登録したユーザーのみログインを許可
         const existingUser = await prisma.user.findUnique({
           where: { email: user.email }
         })
 
         if (!existingUser) {
-          return false // 登録されていないユーザーは拒否
+          return false
         }
       }
       return true
