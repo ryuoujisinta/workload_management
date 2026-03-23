@@ -44,9 +44,12 @@ export default async function UserTimesheetPage(props: {
   if (searchParams?.week) {
     const [wy, wm, wd] = searchParams.week.split("-").map(Number)
     startOfWeek = new Date(wy, wm - 1, wd)
-  } else {
-    // デフォルト: 選択月の最初の月曜日を探す
+  } else if (searchParams?.month) {
+    // 検索パラメータに月指定があるが週指定がない場合は、その月の1日を表示
     startOfWeek = new Date(selectedYear, selectedMonth - 1, 1)
+  } else {
+    // デフォルト: 今日を表示
+    startOfWeek = new Date(now)
   }
 
   // 月曜始まりに補正
@@ -168,6 +171,9 @@ export default async function UserTimesheetPage(props: {
               前週
             </LinkButton>
           )}
+          <LinkButton href="/user/timesheet" variant="outline">
+            今日
+          </LinkButton>
           {hasNextWeek ? (
             <LinkButton
               href={`?month=${selectedMonthStr}&week=${formatQueryDate(nextWeekDate)}`}
