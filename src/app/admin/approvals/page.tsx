@@ -10,7 +10,10 @@ export default async function AdminApprovalsPage() {
   if (session?.user?.role !== "ADMIN") redirect("/")
 
   const workloads = await prisma.workload.findMany({
-    where: { status: { in: ["PENDING", "APPROVED"] } },
+    where: { 
+      status: { in: ["PENDING", "APPROVED"] },
+      hours: { gt: 0 }
+    },
     include: { user: true, task: { include: { project: true } } },
     orderBy: { date: "desc" }
   })
