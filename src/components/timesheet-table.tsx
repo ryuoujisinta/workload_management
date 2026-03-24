@@ -32,7 +32,7 @@ export default function TimesheetTable({ tasks, dates, initialWorkloads, targetM
     initialWorkloads.forEach(w => {
       const d = w.date.toISOString().split('T')[0]
       if (grid[d] && grid[d][w.taskId] !== undefined) {
-        grid[d][w.taskId] = w.hours.toString()
+        grid[d][w.taskId] = w.hours === 0 ? "" : w.hours.toString()
       }
     })
     return grid

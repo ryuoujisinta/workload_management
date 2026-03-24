@@ -65,4 +65,14 @@ describe('TimesheetTable', () => {
       expect(mockSave).toHaveBeenCalledWith([{ taskId: 't1', date: '2023-10-15', hours: 5 }])
     })
   })
+
+  it('renders 0 hours as empty string to show placeholder', () => {
+    const workloads = [
+      { id: 'w1', userId: 'u1', taskId: 't1', date: new Date('2023-10-15T00:00:00Z'), hours: 0, status: 'DRAFT' }
+    ]
+    render(<TimesheetTable tasks={tasks} dates={dates} initialWorkloads={workloads as any} targetMonth="2023-10" />)
+    
+    const inputs = screen.getAllByRole('spinbutton')
+    expect((inputs[0] as HTMLInputElement).value).toBe('')
+  })
 })
