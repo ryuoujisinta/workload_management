@@ -26,3 +26,7 @@ next-env.d.ts
 # e2e auth state
 /e2e/.auth/
 /e2e/db-backup.sql
+
+# VS Code
+.vscode/
+.history/
