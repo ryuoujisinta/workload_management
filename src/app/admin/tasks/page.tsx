@@ -50,7 +50,11 @@ export default async function AdminTasksPage(props: {
   // --- 選択年の全プロジェクトとタスクを取得 ---
   const projects = await prisma.project.findMany({
     where: { year: selectedYear },
-    include: { tasks: true },
+    include: {
+      tasks: {
+        orderBy: { name: "asc" }
+      }
+    },
     orderBy: { name: "asc" }
   })
 

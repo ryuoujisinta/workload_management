@@ -46,7 +46,10 @@ export default async function UserTasksPage(props: {
       monthlyTasks: { some: { targetMonth: selectedMonthStr } }
     },
     include: { project: true },
-    orderBy: { project: { name: "asc" } },
+    orderBy: [
+      { project: { name: "asc" } },
+      { name: "asc" }
+    ],
   })
 
   // ユーザーが登録しているタスクのうち、当月有効なもの
