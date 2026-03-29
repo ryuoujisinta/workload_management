@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Label } from "@/components/ui/label"
 import { getProjectStats } from "@/actions/admin-stats"
 import { LinkButton } from "@/components/link-button"
+import type { StatsTab } from "@/lib/project-stats-csv"
+import { ProjectStatsCsvButton } from "@/components/project-stats-csv-button"
 
 export default async function ProjectStatsPage(props: {
-  searchParams?: Promise<{ year?: string; projectId?: string }>
+  searchParams?: Promise<{ year?: string; projectId?: string; tab?: StatsTab }>
 }) {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") {
@@ -20,7 +22,7 @@ export default async function ProjectStatsPage(props: {
 
   const selectedYear = searchParams?.year ? parseInt(searchParams.year, 10) : currentYear
   const selectedProjectId = searchParams?.projectId || undefined
-  const selectedTab = (searchParams as any)?.tab || "task"
+  const selectedTab = searchParams?.tab || "task"
 
   // データ取得
   const stats = await getProjectStats(selectedYear, selectedProjectId)
@@ -33,6 +35,14 @@ export default async function ProjectStatsPage(props: {
     if (selectedProjectId) params.set("projectId", selectedProjectId)
     params.set("tab", tab)
     return `?${params.toString()}`
+  }
+
+  const getExportUrl = (tab: StatsTab) => {
+    const params = new URLSearchParams()
+    params.set("year", selectedYear.toString())
+    params.set("tab", tab)
+    if (selectedProjectId) params.set("projectId", selectedProjectId)
+    return `/admin/projects/stats/export?${params.toString()}`
   }
 
   return (
@@ -128,9 +138,14 @@ export default async function ProjectStatsPage(props: {
       {selectedTab === "user" && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
-            </CardTitle>
+            <div className="flex items-start justify-between gap-4">
+              <CardTitle>
+                ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
+              </CardTitle>
+              <ProjectStatsCsvButton url={getExportUrl("user")} variant="outline" size="sm">
+                CSVダウンロード
+              </ProjectStatsCsvButton>
+            </div>
           </CardHeader>
           <CardContent>
             {stats.users.length === 0 ? (
@@ -188,9 +203,14 @@ export default async function ProjectStatsPage(props: {
       {selectedTab === "task" && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              タスク別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
-            </CardTitle>
+            <div className="flex items-start justify-between gap-4">
+              <CardTitle>
+                タスク別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
+              </CardTitle>
+              <ProjectStatsCsvButton url={getExportUrl("task")} variant="outline" size="sm">
+                CSVダウンロード
+              </ProjectStatsCsvButton>
+            </div>
           </CardHeader>
           <CardContent>
             {stats.tasks.length === 0 ? (
@@ -250,9 +270,14 @@ export default async function ProjectStatsPage(props: {
       {selectedTab === "taskUser" && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              タスク×ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
-            </CardTitle>
+            <div className="flex items-start justify-between gap-4">
+              <CardTitle>
+                タスク×ユーザー別集計 ({selectedYear}年 {selectedProjectId ? stats.projects.find(p => p.id === selectedProjectId)?.name : "全プロジェクト"})
+              </CardTitle>
+              <ProjectStatsCsvButton url={getExportUrl("taskUser")} variant="outline" size="sm">
+                CSVダウンロード
+              </ProjectStatsCsvButton>
+            </div>
           </CardHeader>
           <CardContent>
             {stats.taskUserStats.length === 0 ? (

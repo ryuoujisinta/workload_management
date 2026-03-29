@@ -29,16 +29,19 @@ test.describe('Admin Statistics (プロジェクト別集計)', () => {
     await page.getByRole('link', { name: 'ユーザー別', exact: true }).click()
     await expect(page).toHaveURL(/.*tab=user.*/)
     await expect(page.getByText(/ユーザー別集計/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'CSVダウンロード' })).toBeVisible()
 
     // タスク×ユーザー別タブ
     await page.getByRole('link', { name: 'タスク×ユーザー別', exact: true }).click()
     await expect(page).toHaveURL(/.*tab=taskUser.*/)
     await expect(page.getByText(/タスク×ユーザー別集計/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'CSVダウンロード' })).toBeVisible()
 
     // タスク別タブに戻る
     await page.getByRole('link', { name: 'タスク別', exact: true }).click()
     await expect(page).toHaveURL(/.*tab=task.*/)
     await expect(page.getByText(/タスク別集計/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'CSVダウンロード' })).toBeVisible()
   })
 
   test('プロジェクトフィルターが機能する', async ({ page }) => {

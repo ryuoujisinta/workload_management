@@ -3,6 +3,8 @@
 import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 
+const MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] as const
+
 export type MonthlyStats = {
   [month: string]: number // "04", "05", ..., "03"
 }
@@ -44,6 +46,10 @@ export type ProjectStatsResult = {
   projects: { id: string, name: string }[]
 }
 
+function createEmptyMonthStats(): MonthlyStats {
+  return Object.fromEntries(MONTHS.map((month) => [month, 0]))
+}
+
 /**
  * プロジェクトごとの工数集計を取得する
  * @param year 年度 (例: 2025)
@@ -61,7 +67,14 @@ export async function getProjectStats(year: number, projectId?: string): Promise
   })
 
   if (projects.length === 0) {
-    return { users: [], tasks: [], taskUserStats: [], monthTotals: {}, grandTotal: 0, projects: [] }
+    return {
+      users: [],
+      tasks: [],
+      taskUserStats: [],
+      monthTotals: createEmptyMonthStats(),
+      grandTotal: 0,
+      projects: [],
+    }
   }
 
   const projectIds = projectId ? [projectId] : projects.map(p => p.id)
@@ -101,12 +114,10 @@ export async function getProjectStats(year: number, projectId?: string): Promise
   })
 
   // 4. 集計
-  const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
   const userMap: Record<string, UserStats> = {}
   const taskMap: Record<string, TaskStats> = {}
   const taskUserMap: Record<string, Record<string, { userId: string, userName: string, months: MonthlyStats, total: number }>> = {}
-  const monthTotals: MonthlyStats = {}
-  months.forEach(m => monthTotals[m] = 0)
+  const monthTotals = createEmptyMonthStats()
   let grandTotal = 0
 
   workloads.forEach(w => {
@@ -121,7 +132,7 @@ export async function getProjectStats(year: number, projectId?: string): Promise
         months: {},
         total: 0
       }
-      months.forEach(m => userMap[w.userId].months[m] = 0)
+      MONTHS.forEach(m => userMap[w.userId].months[m] = 0)
     }
     userMap[w.userId].months[month] += w.hours
     userMap[w.userId].total += w.hours
@@ -131,11 +142,11 @@ export async function getProjectStats(year: number, projectId?: string): Promise
       taskMap[w.taskId] = {
         id: w.taskId,
         name: w.task.name,
-        projectName: (w.task as any).project.name,
+        projectName: w.task.project.name,
         months: {},
         total: 0
       }
-      months.forEach(m => taskMap[w.taskId].months[m] = 0)
+      MONTHS.forEach(m => taskMap[w.taskId].months[m] = 0)
     }
     taskMap[w.taskId].months[month] += w.hours
     taskMap[w.taskId].total += w.hours
@@ -151,7 +162,7 @@ export async function getProjectStats(year: number, projectId?: string): Promise
         months: {},
         total: 0
       }
-      months.forEach(m => taskUserMap[w.taskId][w.userId].months[m] = 0)
+      MONTHS.forEach(m => taskUserMap[w.taskId][w.userId].months[m] = 0)
     }
     taskUserMap[w.taskId][w.userId].months[month] += w.hours
     taskUserMap[w.taskId][w.userId].total += w.hours
