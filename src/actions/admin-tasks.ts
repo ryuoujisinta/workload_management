@@ -23,6 +23,20 @@ export async function createTask(formData: FormData) {
   revalidatePath("/admin/tasks")
 }
 
+export async function updateTask(taskId: string, formData: FormData) {
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized")
+
+  const name = formData.get("name")
+  if (typeof name !== "string" || !name.trim()) throw new Error("Invalid data")
+
+  await prisma.task.update({
+    where: { id: taskId },
+    data: { name: name.trim() },
+  })
+  revalidatePath("/admin/tasks")
+}
+
 export async function deleteTask(taskId: string) {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized")

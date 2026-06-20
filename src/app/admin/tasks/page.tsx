@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { LinkButton } from "@/components/link-button"
-import { createTask, deleteTask, toggleMonthlyTask } from "@/actions/admin-tasks"
-import { createProject, deleteProject } from "@/actions/admin-projects"
+import { createTask, deleteTask, toggleMonthlyTask, updateTask } from "@/actions/admin-tasks"
+import { createProject, deleteProject, updateProject } from "@/actions/admin-projects"
 import { DeleteButton } from "@/components/delete-button"
 
 import { ImportCSVButton } from "@/components/import-csv-button"
@@ -115,7 +115,12 @@ export default async function AdminTasksPage(props: {
                     return (
                       <tr key={t.id} className="hover:bg-muted/50 transition-colors">
                         <td className="p-3">{t.project?.name}</td>
-                        <td className="p-3">{t.name}</td>
+                        <td className="p-3">
+                          <form action={updateTask.bind(null, t.id)} className="flex min-w-56 items-center gap-2">
+                            <Input name="name" defaultValue={t.name} aria-label={`${t.name}のタスク名`} required />
+                            <Button type="submit" variant="outline" size="sm">保存</Button>
+                          </form>
+                        </td>
                         <td className="p-3 text-center">
                           <form action={toggleMonthlyTask.bind(null, t.id, selectedMonthStr, !isActive)} className="inline">
                             <Button type="submit" variant={isActive ? "default" : "outline"} size="sm">
@@ -192,8 +197,11 @@ export default async function AdminTasksPage(props: {
             <CardContent>
               <div className="space-y-4">
                 {projects.map(p => (
-                  <div key={p.id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
-                    <span className="text-sm font-medium">{p.name}</span>
+                  <div key={p.id} className="flex items-center gap-2 border-b pb-2 last:border-0 last:pb-0">
+                    <form action={updateProject.bind(null, p.id)} className="flex min-w-0 flex-1 items-center gap-2">
+                      <Input name="name" defaultValue={p.name} aria-label={`${p.name}のプロジェクト名`} required />
+                      <Button type="submit" variant="outline" size="sm">保存</Button>
+                    </form>
                     <DeleteButton 
                       formAction={deleteProject.bind(null, p.id)} 
                       variant="ghost" 

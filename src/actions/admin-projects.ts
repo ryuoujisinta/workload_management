@@ -39,6 +39,27 @@ export async function createProject(formData: FormData) {
   }
 }
 
+export async function updateProject(projectId: string, formData: FormData) {
+  const session = await auth()
+  if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized")
+
+  const name = formData.get("name")
+  if (typeof name !== "string" || !name.trim()) throw new Error("Invalid data")
+
+  const normalizedName = name.trim()
+  const existing = await prisma.project.findFirst({
+    where: { name: normalizedName, NOT: { id: projectId } },
+    select: { id: true },
+  })
+  if (existing) throw new Error("Project name already exists")
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { name: normalizedName },
+  })
+  revalidatePath("/admin/tasks")
+}
+
 export async function deleteProject(projectId: string) {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") throw new Error("Unauthorized")
