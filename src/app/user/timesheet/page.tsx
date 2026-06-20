@@ -74,22 +74,15 @@ export default async function UserTimesheetPage(props: {
   const endOfWeek = new Date(startOfWeek)
   endOfWeek.setDate(startOfWeek.getDate() + 6)
 
-  // --- 前週 / 次週 (月をまたがない、ただし週の一部が選択月に含まれていればOK) ---
-  const checkWeekInMonth = (weekStart: Date, targetMonthStr: string) => {
-    const mondayStr = formatMonth(weekStart.getFullYear(), weekStart.getMonth() + 1)
-    const sundayDate = new Date(weekStart)
-    sundayDate.setDate(weekStart.getDate() + 6)
-    const sundayStr = formatMonth(sundayDate.getFullYear(), sundayDate.getMonth() + 1)
-    return mondayStr === targetMonthStr || sundayStr === targetMonthStr
-  }
-
+  // --- 前週 / 次週 ---
   const prevWeekDate = new Date(startOfWeek)
   prevWeekDate.setDate(startOfWeek.getDate() - 7)
-  const hasPrevWeek = checkWeekInMonth(prevWeekDate, selectedMonthStr)
 
   const nextWeekDate = new Date(startOfWeek)
   nextWeekDate.setDate(startOfWeek.getDate() + 7)
-  const hasNextWeek = checkWeekInMonth(nextWeekDate, selectedMonthStr)
+
+  const prevWeekMonthStr = formatMonth(prevWeekDate.getFullYear(), prevWeekDate.getMonth() + 1)
+  const nextWeekMonthStr = formatMonth(nextWeekDate.getFullYear(), nextWeekDate.getMonth() + 1)
 
   // --- 前月 / 次月 ---
   const prevMonthDate = new Date(selectedYear, selectedMonth - 2, 1)
@@ -163,33 +156,21 @@ export default async function UserTimesheetPage(props: {
           {formatQueryDate(startOfWeek)} 〜 {formatQueryDate(endOfWeek)}
         </p>
         <div className="flex space-x-2">
-          {hasPrevWeek ? (
-            <LinkButton
-              href={`?month=${selectedMonthStr}&week=${formatQueryDate(prevWeekDate)}`}
-              variant="outline"
-            >
-              前週
-            </LinkButton>
-          ) : (
-            <LinkButton href="#" variant="outline" className="pointer-events-none opacity-40">
-              前週
-            </LinkButton>
-          )}
+          <LinkButton
+            href={`?month=${prevWeekMonthStr}&week=${formatQueryDate(prevWeekDate)}`}
+            variant="outline"
+          >
+            前週
+          </LinkButton>
           <LinkButton href="/user/timesheet" variant="outline">
             今日
           </LinkButton>
-          {hasNextWeek ? (
-            <LinkButton
-              href={`?month=${selectedMonthStr}&week=${formatQueryDate(nextWeekDate)}`}
-              variant="outline"
-            >
-              次週
-            </LinkButton>
-          ) : (
-            <LinkButton href="#" variant="outline" className="pointer-events-none opacity-40">
-              次週
-            </LinkButton>
-          )}
+          <LinkButton
+            href={`?month=${nextWeekMonthStr}&week=${formatQueryDate(nextWeekDate)}`}
+            variant="outline"
+          >
+            次週
+          </LinkButton>
         </div>
       </div>
 

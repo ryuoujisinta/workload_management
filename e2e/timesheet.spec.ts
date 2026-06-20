@@ -252,3 +252,23 @@ test.describe('User Timesheet (工数タイムシート)', () => {
     await expect(noTaskMsg.or(timesheetTable).first()).toBeVisible()
   })
 })
+
+test.describe('User Timesheet week navigation', () => {
+  test('「次週」ボタンで翌月の週へ切り替わる', async ({ page }) => {
+    await page.goto('/user/timesheet?month=2026-06&week=2026-06-29')
+
+    await page.getByRole('link', { name: '次週' }).click()
+
+    await expect(page).toHaveURL(/month=2026-07&week=2026-07-06/)
+    await expect(page.locator('h1 + p')).toHaveText('2026年7月')
+  })
+
+  test('「前週」ボタンで前月の週へ切り替わる', async ({ page }) => {
+    await page.goto('/user/timesheet?month=2026-07&week=2026-07-06')
+
+    await page.getByRole('link', { name: '前週' }).click()
+
+    await expect(page).toHaveURL(/month=2026-06&week=2026-06-29/)
+    await expect(page.locator('h1 + p')).toHaveText('2026年6月')
+  })
+})
